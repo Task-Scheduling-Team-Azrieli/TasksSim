@@ -4,12 +4,11 @@ import tkinter
 from tkinter import ttk
 from typing import List
 import sv_ttk
-import queue
 from Greedy import Greedy
 from Task import Task
 from Processor import Processor
 from Algorithm import Algorithm
-import debugpy
+import time
 
 
 class TasksSim:
@@ -503,6 +502,7 @@ class TasksSim:
 
         self.thread_lock = False
 
+        # callback for when a processor finishes its work on a task
         def task_finished(processor: Processor, original_outline_color):
             processor.task_finished()
 
@@ -520,18 +520,20 @@ class TasksSim:
 
         all_tasks_done = check_all_tasks_done()
         while not all_tasks_done:
+            if self.thread_lock:
+                time.sleep(0.1)
+                continue
+
             algorithm.update_lists(
                 task_list=self.task_list, processors_list=self.processors_list
             )
+
             task: Task = None
             processor: Processor = None
             task, processor = algorithm.decide()
 
             if task == None and processor == None:
                 all_tasks_done = check_all_tasks_done()
-                continue
-
-            if (self.thread_lock):
                 continue
 
             processor.work_on_task(task)
