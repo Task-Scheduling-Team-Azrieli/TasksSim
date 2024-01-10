@@ -159,6 +159,7 @@ class TasksSim:
                     self.canvas.coords(
                         text_id, x + length / 2 + text_width / 2 - 1, y + length / 2
                     )
+                    # the processor's rectangle
                     self.canvas.create_rectangle(
                         x,
                         y,
@@ -172,6 +173,7 @@ class TasksSim:
                         ),
                         width=outline_width,
                     )
+                    # the processor's name
                     self.canvas.create_text(
                         x + length / 2 + text_width / 2 - 1,
                         y - length / 2,
@@ -201,7 +203,7 @@ class TasksSim:
         ready_queue_frame.columnconfigure(0, weight=1)
         ready_queue = []
         for task in self.task_list:
-            if not task.blocked_by and not task.done:
+            if task.is_ready():
                 ready_queue.append(task.name + ": " + str(task.duration))
         self._display_queue(ready_queue_frame, ready_queue, "Ready")
 
@@ -212,7 +214,7 @@ class TasksSim:
         blocked_queue_frame.columnconfigure(0, weight=1)
         blocked_queue = []
         for task in self.task_list:
-            if task.blocked_by and not task.done:
+            if task.is_blocked():
                 blocked_queue.append(task.name + ": " + str(task.duration))
         self._display_queue(blocked_queue_frame, blocked_queue, "Blocked")
         blocked_queue_frame.grid(column=1, row=0, sticky="nsew")
@@ -502,7 +504,6 @@ class TasksSim:
 
         # callback for when a processor finishes its work on a task
         def work_on_task(processor: Processor, original_outline_color, callback):
-
             # update canvas
             tag = processor.type + ":" + processor.name
             self.canvas.itemconfig(tag + "text", text="")
@@ -514,7 +515,7 @@ class TasksSim:
             # update queues
             self.display_queues(self.queues_frame)
 
-            # Call the callback to signal task completion
+            # call the callback to signal task completion
             callback()
 
         def process_next_task():
@@ -527,7 +528,7 @@ class TasksSim:
             task, processor = algorithm.decide()
 
             if task is None and processor is None:
-                # No available tasks or processors
+                # no available tasks or processors
                 return
 
             processor.work_on_task(task)
@@ -535,10 +536,12 @@ class TasksSim:
             # take care of processor outline color and text above processor
             original_outline_color = self.update_canvas(processor, task)
 
-            # Schedule the task completion callback after task duration
+            # schedule the task completion callback after task duration
             self.canvas.after(
                 ms=int(task.duration) * 1000,
-                func=lambda: work_on_task(processor, original_outline_color, process_next_task),
+                func=lambda: work_on_task(
+                    processor, original_outline_color, process_next_task
+                ),
             )
 
         all_tasks_done = check_all_tasks_done()
@@ -546,7 +549,6 @@ class TasksSim:
             process_next_task()
             all_tasks_done = check_all_tasks_done()
             self.canvas.update()
-
 
     def update_canvas(self, processor: Processor, task: Task):
         tag = processor.type + ":" + processor.name

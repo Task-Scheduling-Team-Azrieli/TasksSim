@@ -16,12 +16,14 @@ class Processor:
     def work_on_task(self, task: "Task"):
         self.idle = False
         self.current_task = task
+        self.current_task.being_processed = True
 
     def task_finished(self):
         self.current_task.done = True
+        self.current_task.being_processed = False
         # remove current task from all blocked_by lists of the tasks its blocking
         for task in self.current_task.blocking:
-            if (self.current_task in task.blocked_by):
+            if self.current_task in task.blocked_by:
                 task.blocked_by.remove(self.current_task)
 
         self.idle = True

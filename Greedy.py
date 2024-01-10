@@ -12,7 +12,7 @@ class Greedy(Algorithm):
     # returns a pair (task, processor) that the algorithm decided upon
     def decide(self):
         ready_tasks: List["Task"] = [
-            task for task in self.task_list if not task.blocked_by if not task.done
+            task for task in self.task_list if task.is_ready()
         ]
         random.shuffle(ready_tasks)
 
@@ -21,4 +21,5 @@ class Greedy(Algorithm):
             for processor in self.processors_list:
                 if processor.type == task.processor_type and processor.idle:
                     return (task, processor)
+                
         return (None, None)
