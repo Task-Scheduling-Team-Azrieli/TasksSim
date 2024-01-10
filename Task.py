@@ -18,6 +18,7 @@ class Task:
         self.duration = duration
         self.ready = False
         self.done = False
+        self.being_processed = False
         self.blocking = blocking
         self.blocked_by = blocked_by
 

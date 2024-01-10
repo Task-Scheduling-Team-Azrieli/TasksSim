@@ -23,29 +23,29 @@ class TasksSim:
         self.processor_types_list: List["int"] = []
 
         # TESTING
-        # two = Task("1", 3, "2", [], [])
-        # one = Task("2", 3, "1", [], [])
-        # one_two = Task("12", 3, "1", [], [one, two])
-        # two.blocking.append(one_two)
-        # one.blocking.append(one_two)
+        two = Task("1", 3, "2", [], [])
+        one = Task("2", 3, "1", [], [])
+        one_two = Task("12", 3, "1", [], [one, two])
+        two.blocking.append(one_two)
+        one.blocking.append(one_two)
 
-        # three = Task("3", 3, "1", [], [])
-        # five = Task("5", 3, "1", [], [])
-        # three_five = Task("35", 3, "1", [], [three, five])
-        # three.blocking.append(three_five)
-        # five.blocking.append(three_five)
+        three = Task("3", 3, "1", [], [])
+        five = Task("5", 3, "1", [], [])
+        three_five = Task("35", 3, "1", [], [three, five])
+        three.blocking.append(three_five)
+        five.blocking.append(three_five)
 
-        # one_two_three_five = Task("1235", 3, "1", [], [three_five, one_two])
-        # three_five.blocking.append(one_two_three_five)
-        # one_two.blocking.append(one_two_three_five)
+        one_two_three_five = Task("1235", 3, "1", [], [three_five, one_two])
+        three_five.blocking.append(one_two_three_five)
+        one_two.blocking.append(one_two_three_five)
 
-        # self.task_list.append(one)
-        # self.task_list.append(two)
-        # self.task_list.append(three)
-        # self.task_list.append(five)
-        # self.task_list.append(one_two)
-        # self.task_list.append(three_five)
-        # self.task_list.append(one_two_three_five)
+        self.task_list.append(one)
+        self.task_list.append(two)
+        self.task_list.append(three)
+        self.task_list.append(five)
+        self.task_list.append(one_two)
+        self.task_list.append(three_five)
+        self.task_list.append(one_two_three_five)
 
         # set algorithm
         self.algorithm = Greedy(
@@ -500,30 +500,24 @@ class TasksSim:
 
             return True
 
-        self.thread_lock = False
-
         # callback for when a processor finishes its work on a task
-        def task_finished(processor: Processor, original_outline_color):
-            processor.task_finished()
+        def work_on_task(processor: Processor, original_outline_color, callback):
 
-            self.display_queues(self.queues_frame)
-
+            # update canvas
             tag = processor.type + ":" + processor.name
-
-            self.thread_lock = True
-
             self.canvas.itemconfig(tag + "text", text="")
             self.canvas.itemconfig(tag, outline=original_outline_color)
             self.canvas.update()
 
-            self.thread_lock = False
+            processor.task_finished()
 
-        all_tasks_done = check_all_tasks_done()
-        while not all_tasks_done:
-            if self.thread_lock:
-                time.sleep(0.1)
-                continue
+            # update queues
+            self.display_queues(self.queues_frame)
 
+            # Call the callback to signal task completion
+            callback()
+
+        def process_next_task():
             algorithm.update_lists(
                 task_list=self.task_list, processors_list=self.processors_list
             )
@@ -532,26 +526,27 @@ class TasksSim:
             processor: Processor = None
             task, processor = algorithm.decide()
 
-            if task == None and processor == None:
-                all_tasks_done = check_all_tasks_done()
-                continue
+            if task is None and processor is None:
+                # No available tasks or processors
+                return
 
             processor.work_on_task(task)
 
-            # take care of processor outline color amd text above processor
+            # take care of processor outline color and text above processor
             original_outline_color = self.update_canvas(processor, task)
 
-            # invoke task_finished after the duration of the task
-            t = threading.Timer(
-                float(task.duration),
-                task_finished,
-                [processor, original_outline_color],
+            # Schedule the task completion callback after task duration
+            self.canvas.after(
+                ms=int(task.duration) * 1000,
+                func=lambda: work_on_task(processor, original_outline_color, process_next_task),
             )
 
-            t.start()
-
+        all_tasks_done = check_all_tasks_done()
+        while not all_tasks_done:
+            process_next_task()
             all_tasks_done = check_all_tasks_done()
             self.canvas.update()
+
 
     def update_canvas(self, processor: Processor, task: Task):
         tag = processor.type + ":" + processor.name
