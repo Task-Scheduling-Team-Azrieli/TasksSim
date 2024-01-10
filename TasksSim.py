@@ -23,29 +23,29 @@ class TasksSim:
         self.processor_types_list: List["int"] = []
 
         # TESTING
-        two = Task("1", 3, "2", [], [])
-        one = Task("2", 3, "1", [], [])
-        one_two = Task("12", 3, "1", [], [one, two])
-        two.blocking.append(one_two)
-        one.blocking.append(one_two)
+        # two = Task("1", 3, "2", [], [])
+        # one = Task("2", 3, "1", [], [])
+        # one_two = Task("12", 3, "1", [], [one, two])
+        # two.blocking.append(one_two)
+        # one.blocking.append(one_two)
 
-        three = Task("3", 3, "1", [], [])
-        five = Task("5", 3, "1", [], [])
-        three_five = Task("35", 3, "1", [], [three, five])
-        three.blocking.append(three_five)
-        five.blocking.append(three_five)
+        # three = Task("3", 3, "1", [], [])
+        # five = Task("5", 3, "1", [], [])
+        # three_five = Task("35", 3, "1", [], [three, five])
+        # three.blocking.append(three_five)
+        # five.blocking.append(three_five)
 
-        one_two_three_five = Task("1235", 3, "1", [], [three_five, one_two])
-        three_five.blocking.append(one_two_three_five)
-        one_two.blocking.append(one_two_three_five)
+        # one_two_three_five = Task("1235", 3, "1", [], [three_five, one_two])
+        # three_five.blocking.append(one_two_three_five)
+        # one_two.blocking.append(one_two_three_five)
 
-        self.task_list.append(one)
-        self.task_list.append(two)
-        self.task_list.append(three)
-        self.task_list.append(five)
-        self.task_list.append(one_two)
-        self.task_list.append(three_five)
-        self.task_list.append(one_two_three_five)
+        # self.task_list.append(one)
+        # self.task_list.append(two)
+        # self.task_list.append(three)
+        # self.task_list.append(five)
+        # self.task_list.append(one_two)
+        # self.task_list.append(three_five)
+        # self.task_list.append(one_two_three_five)
 
         # set algorithm
         self.algorithm = Greedy(
