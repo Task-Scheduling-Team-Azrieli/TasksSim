@@ -17,7 +17,7 @@ class TasksSim:
         self.window = tkinter.Tk()
         self.window.geometry("1200x800")
 
-        # tasks and processors list
+        # tasks and processors list/databases
         self.task_list: List["Task"] = []
         self.processors_list: List["Processor"] = []
         self.processor_types_list: List["int"] = []
@@ -436,17 +436,17 @@ class TasksSim:
         window: tkinter.Toplevel,
     ):
         # add the new task
-        blocking_list = [self.task_list[task] for task in blocking]
-        blocked_by_list = [self.task_list[task] for task in blocked_by]
+        blocking_list:List['Task'] = [self.task_list[task] for task in blocking]
+        blocked_by_list:List['Task'] = [self.task_list[task] for task in blocked_by]
         new_task = Task(name, duration, processor_type, blocking_list, blocked_by_list)
+        
         self.task_list.append(new_task)
 
-        # update all other tasks
-        for task in self.task_list:
-            if task in blocking_list:
-                task.blocked_by.append(new_task)
-            if task in blocked_by_list:
-                task.blocking.append(new_task)
+        # update other tasks
+        for task in blocking_list:
+            task.blocked_by.append(new_task)
+        for task in blocked_by_list:
+            task.blocking.append(new_task)
 
         # refresh queues and destroy window
         self.display_queues(self.queues_frame)
@@ -480,7 +480,7 @@ class TasksSim:
 
         for item_index in range(len(items)):
             multiple_choice_list.insert(
-                "end", items[item_index].name + ": " + items[item_index].duration
+                "end", items[item_index].name + ": " + str(items[item_index].duration)
             )
 
         multiple_choice_list.pack(expand=True, fill="both")
@@ -549,6 +549,9 @@ class TasksSim:
             process_next_task()
             all_tasks_done = check_all_tasks_done()
             self.canvas.update()
+
+    def _start2(self,algorithm: Algorithm):
+        pass
 
     def update_canvas(self, processor: Processor, task: Task):
         tag = processor.type + ":" + processor.name
