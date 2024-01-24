@@ -19,33 +19,43 @@ class TasksSim:
 
         # tasks and processors list/databases
         self.task_list: List["Task"] = []
+        self.tasks_done: List['Task'] = []
         self.processors_list: List["Processor"] = []
         self.processor_types_list: List["int"] = []
+        self.blocked_by_sum = 0
 
         # TESTING
         two = Task("1", 3, "2", [], [])
         one = Task("2", 3, "1", [], [])
         one_two = Task("12", 3, "1", [], [one, two])
-        two.blocking.append(one_two)
-        one.blocking.append(one_two)
+        # two.blocking.append(one_two)
+        # one.blocking.append(one_two)
 
         three = Task("3", 3, "1", [], [])
         five = Task("5", 3, "1", [], [])
         three_five = Task("35", 3, "1", [], [three, five])
-        three.blocking.append(three_five)
-        five.blocking.append(three_five)
+        # three.blocking.append(three_five)
+        # five.blocking.append(three_five)
 
         one_two_three_five = Task("1235", 3, "1", [], [three_five, one_two])
-        three_five.blocking.append(one_two_three_five)
-        one_two.blocking.append(one_two_three_five)
+        # three_five.blocking.append(one_two_three_five)
+        # one_two.blocking.append(one_two_three_five)
 
-        self.task_list.append(one)
-        self.task_list.append(two)
-        self.task_list.append(three)
-        self.task_list.append(five)
-        self.task_list.append(one_two)
-        self.task_list.append(three_five)
-        self.task_list.append(one_two_three_five)
+        # self.task_list.append(one)
+        # self.task_list.append(two)
+        # self.task_list.append(three)
+        # self.task_list.append(five)
+        # self.task_list.append(one_two)
+        # self.task_list.append(three_five)
+        # self.task_list.append(one_two_three_five)
+
+        self._add_task(two, None)
+        self._add_task(one, None)
+        self._add_task(one_two, None)
+        self._add_task(three, None)
+        self._add_task(five, None)
+        self._add_task(three_five, None)
+        self._add_task(one_two_three_five, None)
 
         # set algorithm
         self.algorithm = Greedy(
@@ -198,7 +208,7 @@ class TasksSim:
             self.canvas_is_packed = True
 
     def display_queues(self, window):
-        # Ready Queue
+        # Ready Tasks
         ready_queue_frame = ttk.Frame(window)
         ready_queue_frame.columnconfigure(0, weight=1)
         ready_queue = []
@@ -209,7 +219,7 @@ class TasksSim:
 
         ready_queue_frame.grid(column=0, row=0, sticky="nsew")
 
-        # Blocked Queue
+        # Blocked Tasks
         blocked_queue_frame = ttk.Frame(window)
         blocked_queue_frame.columnconfigure(0, weight=1)
         blocked_queue = []
@@ -222,10 +232,10 @@ class TasksSim:
         # Done Tasks
         done_queue_frame = ttk.Frame(window)
         done_queue_frame.columnconfigure(0, weight=1)
-        done_queue = []
-        for task in self.task_list:
-            if task.done:
-                done_queue.append(task.name + ": " + str(task.duration))
+        done_queue = [task.name + ": " + str(task.duration) for task in self.tasks_done]
+        # for task in self.task_list:
+        #     if task.done:
+        #         done_queue.append(task.name + ": " + str(task.duration))
         self._display_queue(done_queue_frame, done_queue, "Done")
         done_queue_frame.grid(column=2, row=0, sticky="nsew")
 
@@ -313,13 +323,14 @@ class TasksSim:
         task_processor_label.grid(column=0, row=2, sticky="nsew")
 
         # Tasks that this new task will be blocking
+        items = [task for task in self.task_list if not task.done]
         blocking_label = ttk.Label(info_frame, text="Blocking: ")
         self.blocking_selected_tasks = []
         blocking_button = ttk.Button(
             info_frame,
             text="Select",
             command=lambda: self._multiple_selection_window(
-                add_task_window, self.task_list, True
+                add_task_window, items, True
             ),
         )
         blocking_label.grid(column=0, row=3, sticky="nsew", pady=10)
@@ -332,7 +343,7 @@ class TasksSim:
             info_frame,
             text="Select",
             command=lambda: self._multiple_selection_window(
-                add_task_window, self.task_list, False
+                add_task_window, items, False
             ),
         )
         blocked_by_label.grid(column=0, row=4, sticky="nsew")
@@ -340,20 +351,25 @@ class TasksSim:
 
         # Add task button
         add_task_button = ttk.Button(
-            info_frame,
-            text="Add Task",
-            command=lambda: self._add_task(
-                task_name_entry.get(),
-                task_duration_entry.get(),
-                task_processor_entry_value.get(),
-                self.blocking_selected_tasks,
-                self.blocked_by_selected_tasks,
-                add_task_window,
-            ),
+            info_frame, text="Add Task", command=lambda: add_task_button_handler()
         )
         add_task_button.grid(column=0, row=5, columnspan=2, pady=40, sticky="nsew")
 
-        # TODO: finish logic to tasks (blocking blocked_by stuff), then canvas then win?
+        def add_task_button_handler():
+            blocking: List["Task"] = [
+                self.task_list[task] for task in self.blocking_selected_tasks
+            ]
+            blocked_by: List["Task"] = [
+                self.task_list[task] for task in self.blocked_by_selected_tasks
+            ]
+            new_task = Task(
+                task_name_entry.get(),
+                task_duration_entry.get(),
+                task_processor_entry_value.get(),
+                blocking,
+                blocked_by,
+            )
+            self._add_task(new_task, add_task_window)
 
     def _add_processor_handler(self, window):
         add_processor_window = tkinter.Toplevel(window)
@@ -428,29 +444,23 @@ class TasksSim:
 
     def _add_task(
         self,
-        name: str,
-        duration: int,
-        processor_type: int,
-        blocking: List["Task"],
-        blocked_by: List["Task"],
+        new_task: Task,
         window: tkinter.Toplevel,
     ):
         # add the new task
-        blocking_list:List['Task'] = [self.task_list[task] for task in blocking]
-        blocked_by_list:List['Task'] = [self.task_list[task] for task in blocked_by]
-        new_task = Task(name, duration, processor_type, blocking_list, blocked_by_list)
-        
+        self.blocked_by_sum += len(new_task.blocked_by)
         self.task_list.append(new_task)
 
         # update other tasks
-        for task in blocking_list:
+        for task in new_task.blocking:
             task.blocked_by.append(new_task)
-        for task in blocked_by_list:
+        for task in new_task.blocked_by:
             task.blocking.append(new_task)
 
         # refresh queues and destroy window
-        self.display_queues(self.queues_frame)
-        window.destroy()
+        if window:
+            self.display_queues(self.queues_frame)
+            window.destroy()
 
     # a window that lets you select multiple tasks
     # to be either blocking or blocked by the new task you're creating
@@ -495,22 +505,23 @@ class TasksSim:
         select_tasks_window.mainloop()
 
     def _start(self, algorithm: Algorithm):
-        def check_all_tasks_done():
-            for task in self.task_list:
-                if not task.done:
-                    return False
-
-            return True
 
         # callback for when a processor finishes its work on a task
-        def work_on_task(processor: Processor, original_outline_color, callback):
+        def work_on_task(
+            processor: Processor, original_outline_color, callback, task: Task
+        ):
             # update canvas
             tag = processor.type + ":" + processor.name
             self.canvas.itemconfig(tag + "text", text="")
             self.canvas.itemconfig(tag, outline=original_outline_color)
             self.canvas.update()
 
+            # update sum and finish task
             processor.task_finished()
+
+            # remove from task_list and add to tasks_done
+            self.task_list.remove(task)
+            self.tasks_done.append(task)
 
             # update queues
             self.display_queues(self.queues_frame)
@@ -540,18 +551,13 @@ class TasksSim:
             self.canvas.after(
                 ms=int(task.duration) * 1000,
                 func=lambda: work_on_task(
-                    processor, original_outline_color, process_next_task
+                    processor, original_outline_color, process_next_task, task
                 ),
             )
 
-        all_tasks_done = check_all_tasks_done()
-        while not all_tasks_done:
+        while len(self.task_list) > 0:
             process_next_task()
-            all_tasks_done = check_all_tasks_done()
             self.canvas.update()
-
-    def _start2(self,algorithm: Algorithm):
-        pass
 
     def update_canvas(self, processor: Processor, task: Task):
         tag = processor.type + ":" + processor.name
