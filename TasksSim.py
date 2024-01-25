@@ -28,26 +28,12 @@ class TasksSim:
         two = Task("1", 3, "2", [], [])
         one = Task("2", 3, "1", [], [])
         one_two = Task("12", 3, "1", [], [one, two])
-        # two.blocking.append(one_two)
-        # one.blocking.append(one_two)
 
         three = Task("3", 3, "1", [], [])
         five = Task("5", 3, "1", [], [])
         three_five = Task("35", 3, "1", [], [three, five])
-        # three.blocking.append(three_five)
-        # five.blocking.append(three_five)
-
+        
         one_two_three_five = Task("1235", 3, "1", [], [three_five, one_two])
-        # three_five.blocking.append(one_two_three_five)
-        # one_two.blocking.append(one_two_three_five)
-
-        # self.task_list.append(one)
-        # self.task_list.append(two)
-        # self.task_list.append(three)
-        # self.task_list.append(five)
-        # self.task_list.append(one_two)
-        # self.task_list.append(three_five)
-        # self.task_list.append(one_two_three_five)
 
         self._add_task(two, None)
         self._add_task(one, None)
@@ -558,6 +544,19 @@ class TasksSim:
         while len(self.task_list) > 0:
             process_next_task()
             self.canvas.update()
+
+    def _start2(self, algorithm: Algorithm):
+        result = {processor: [] for processor in self.processors_list}
+        priority_queue = []
+        def init():
+            task, processor = algorithm.decide()
+            while (task and processor):
+                result[processor.type].append(task)
+
+        init()
+
+
+        pass
 
     def update_canvas(self, processor: Processor, task: Task):
         tag = processor.type + ":" + processor.name
