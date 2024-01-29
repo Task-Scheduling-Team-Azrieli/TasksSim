@@ -9,7 +9,7 @@ from Task import Task
 from Processor import Processor
 from Algorithm import Algorithm
 import time
-import heapq
+from queue import PriorityQueue
 
 
 class TasksSim:
@@ -23,6 +23,7 @@ class TasksSim:
         self.tasks_done: List["Task"] = []
         self.processors_list: List["Processor"] = []
         self.processor_types_list: List["int"] = []
+        self.idle_processors: List["Processor"] = []
         self.blocked_by_sum = 0
 
         # TESTING
@@ -547,7 +548,8 @@ class TasksSim:
 
     def _start2(self, algorithm: Algorithm):
         working_processors = []
-        priority_queue = []
+        idle_processors = self.processors_list.copy()
+        priority_queue = PriorityQueue()
 
         # assign tasks until you can't assign anymore
         def init():
@@ -555,16 +557,36 @@ class TasksSim:
             while task and processor:
                 processor.work_on_task(task)
                 working_processors.append(processor)
+                idle_processors.remove(processor)
                 task, processor = algorithm.decide()
 
         init()
 
         while len(self.task_list) > 0:
-            # choose a task at random
+            # choose a processor (from the working processors) at random and push the task it was
+            # working on to priority queue
             rand_processor: Processor = random.choice(working_processors)
 
-            heapq.heappush(priority_queue, rand_processor.current_task)
+            priority_queue.put(
+                (rand_processor.current_task.duration, rand_processor.current_task)
+            )
+
             rand_processor.finish_task()
+
+            working_processors.remove(rand_processor)
+            idle_processors.append(rand_processor)
+
+            # choose a task from the priority queue for an idle processor
+            algorithm.update_lists(idle_processors, priority_queue)
+            task, processor = algorithm.decide()
+
+
+        # temporary print results TODO: remove later
+        for processor in self.processors_list:
+            print(processor.name + ":\t")
+            for task in processor.work_order:
+                print(task.name + "\t")
+            print("\n")
 
     def update_canvas(self, processor: Processor, task: Task):
         tag = processor.type + ":" + processor.name
