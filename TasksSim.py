@@ -9,6 +9,7 @@ from Task import Task
 from Processor import Processor
 from Algorithm import Algorithm
 import time
+import heapq
 
 
 class TasksSim:
@@ -19,7 +20,7 @@ class TasksSim:
 
         # tasks and processors list/databases
         self.task_list: List["Task"] = []
-        self.tasks_done: List['Task'] = []
+        self.tasks_done: List["Task"] = []
         self.processors_list: List["Processor"] = []
         self.processor_types_list: List["int"] = []
         self.blocked_by_sum = 0
@@ -32,7 +33,7 @@ class TasksSim:
         three = Task("3", 3, "1", [], [])
         five = Task("5", 3, "1", [], [])
         three_five = Task("35", 3, "1", [], [three, five])
-        
+
         one_two_three_five = Task("1235", 3, "1", [], [three_five, one_two])
 
         self._add_task(two, None)
@@ -491,7 +492,6 @@ class TasksSim:
         select_tasks_window.mainloop()
 
     def _start(self, algorithm: Algorithm):
-
         # callback for when a processor finishes its work on a task
         def work_on_task(
             processor: Processor, original_outline_color, callback, task: Task
@@ -503,7 +503,7 @@ class TasksSim:
             self.canvas.update()
 
             # update sum and finish task
-            processor.task_finished()
+            processor.finish_task()
 
             # remove from task_list and add to tasks_done
             self.task_list.remove(task)
@@ -546,17 +546,25 @@ class TasksSim:
             self.canvas.update()
 
     def _start2(self, algorithm: Algorithm):
-        result = {processor: [] for processor in self.processors_list}
+        working_processors = []
         priority_queue = []
+
+        # assign tasks until you can't assign anymore
         def init():
             task, processor = algorithm.decide()
-            while (task and processor):
-                result[processor.type].append(task)
+            while task and processor:
+                processor.work_on_task(task)
+                working_processors.append(processor)
+                task, processor = algorithm.decide()
 
         init()
 
+        while len(self.task_list) > 0:
+            # choose a task at random
+            rand_processor: Processor = random.choice(working_processors)
 
-        pass
+            heapq.heappush(priority_queue, rand_processor.current_task)
+            rand_processor.finish_task()
 
     def update_canvas(self, processor: Processor, task: Task):
         tag = processor.type + ":" + processor.name
