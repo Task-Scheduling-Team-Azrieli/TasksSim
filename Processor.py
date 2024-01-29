@@ -12,7 +12,7 @@ class Processor:
         self.type = processor_type
         self.idle = True
         self.current_task = None
-        work_order = []
+        self.work_order = []
 
     def work_on_task(self, task: "Task"):
         self.idle = False
