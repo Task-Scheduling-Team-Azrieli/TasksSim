@@ -6,15 +6,14 @@ if TYPE_CHECKING:
 
 
 class Algorithm:
-    def __init__(self, task_list: List["Task"], processors_list: List["Processor"]):
-        self.processors_list = processors_list
-        self.task_list = task_list
+    def __init__(self, ready_tasks: List["Task"], processors: List["Processor"]):
+        self.processors = processors
+        self.ready_tasks = ready_tasks
 
-    def update_lists(self, processors_list, task_list):
-        self.processors_list = processors_list
-        self.task_list = task_list
+    def update_lists(self, processors, ready_tasks):
+        self.processors = processors
+        self.ready_tasks = ready_tasks
 
-    # returns a pair (task, processor) meaning the algorithm made a decision
-    # that the task it chose will run on the processor it chose
+    # returns the order of tasks that the algorithm decided we should iterate over
     def decide(self):
         pass
