@@ -10,7 +10,7 @@ class Greedy(Algorithm):
         super().__init__(task_list, processors_list)
 
     # returns a pair (task, processor) that the algorithm decided upon
-    def decide(self):
+    def init(self):
         ready_tasks: List["Task"] = [
             task for task in self.task_list if task.is_ready()
         ]
@@ -20,6 +20,10 @@ class Greedy(Algorithm):
         for task in ready_tasks:
             for processor in self.processors_list:
                 if processor.type == task.processor_type and processor.idle:
-                    return (task, processor)
-                
-        return (None, None)
+                    #TODO: run task on processor
+                    pass
+
+    def decide(self):
+        # TODO: will work only on ready tasks
+        pass
+

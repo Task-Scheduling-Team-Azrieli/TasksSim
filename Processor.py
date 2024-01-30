@@ -25,8 +25,7 @@ class Processor:
         self.current_task.being_processed = False
         # remove current task from all blocked_by lists of the tasks its blocking
         for task in self.current_task.blocking:
-            if self.current_task in task.blocked_by:
-                task.blocked_by.remove(self.current_task)
+            task.blocked_by.remove(self.current_task)
 
         self.idle = True
         self.current_task = None

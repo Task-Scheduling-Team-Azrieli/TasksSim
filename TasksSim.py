@@ -556,6 +556,7 @@ class TasksSim:
             task, processor = algorithm.decide()
             while task and processor:
                 processor.work_on_task(task)
+                priority_queue.put((task.duration, processor.current_task))
                 working_processors.append(processor)
                 idle_processors.remove(processor)
                 task, processor = algorithm.decide()
