@@ -18,11 +18,12 @@ class Processor:
         self.idle = False
         self.work_order.append(task)
         self.current_task = task
+        self.current_task.processed_by = self
         self.current_task.being_processed = True
 
-    def finish_task(self):
+    def task_finished(self):
         self.current_task.done = True
-        self.current_task.being_processed = False
+        self.current_task.processed_by = None
         # remove current task from all blocked_by lists of the tasks its blocking
         for task in self.current_task.blocking:
             task.blocked_by.remove(self.current_task)

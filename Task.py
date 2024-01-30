@@ -17,12 +17,12 @@ class Task:
         self.processor_type = processor_type
         self.duration = duration
         self.done = False
-        self.being_processed = False
+        self.processed_by: Processor = None
         self.blocking = blocking
         self.blocked_by = blocked_by
 
     def is_ready(self):
-        return not self.blocked_by and not self.done and not self.being_processed
+        return not self.blocked_by and not self.done and self.processed_by == None
 
     def is_blocked(self):
         return self.blocked_by and not self.done

@@ -15,5 +15,5 @@ class Algorithm:
         self.ready_tasks = ready_tasks
 
     # returns the order of tasks that the algorithm decided we should iterate over
-    def decide(self):
+    def decide(self) -> List["Task"]:
         pass
