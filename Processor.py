@@ -1,6 +1,4 @@
-import threading
-from typing import TYPE_CHECKING
-from tkinter import Canvas
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from Task import Task
@@ -12,7 +10,7 @@ class Processor:
         self.type = processor_type
         self.idle = True
         self.current_task = None
-        self.work_order = []
+        self.work_order: List["Task"] = []
 
     def work_on_task(self, task: "Task"):
         self.idle = False

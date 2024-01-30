@@ -2,6 +2,7 @@
     "Tasks": {
         "A": {
             "duration": 3,
+            "processor_type": 1,
             "blocking": [
                 "B",
                 "C"
@@ -9,6 +10,7 @@
         },
         "B": {
             "duration": 2,
+            "processor_type": 2,
             "blocking": [
                 "D",
                 "E"
@@ -16,6 +18,7 @@
         },
         "C": {
             "duration": 1,
+            "processor_type": 2,
             "blocking": [
                 "E",
                 "F"
@@ -23,24 +26,28 @@
         },
         "D": {
             "duration": 5,
+            "processor_type": 1,
             "blocking": [
                 "G"
             ]
         },
         "E": {
             "duration": 9,
+            "processor_type": 1,
             "blocking": [
                 "G"
             ]
         },
         "F": {
             "duration": 3,
+            "processor_type": 1,
             "blocking": [
                 "G"
             ]
         },
         "G": {
             "duration": 4,
+            "processor_type": 2,
             "blocking": []
         }
     },

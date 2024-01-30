@@ -26,9 +26,15 @@ class Task:
 
     def is_blocked(self):
         return self.blocked_by and not self.done
+    
+    # insert a task that i am (self) blocking
+    def insert_blocking(self, task: "Task"):
+        self.blocking.append(task)
+        if (self not in task.blocked_by):
+            task.blocked_by.append(self)
 
-    def remove_from_blocks(self, task: "Task"):
-        self.blocks = [t for t in self.blocks if t.name != task.name]
-
-    def remove_from_blocked_by(self, task):
-        self.blocked_by = [t for t in self.blocked_by if t.name != task.name]
+    # insert a task that i am (self) blocked by
+    def insert_blocked_by(self, task: "Task"):
+        self.blocked_by.append(task)
+        if (self not in task.blocking):
+            task.blocking.append(self)

@@ -1,15 +1,10 @@
-import random
-import threading
-import tkinter
-from tkinter import ttk
 from typing import List, Tuple
-import sv_ttk
-from Greedy import Greedy
 from Task import Task
 from Processor import Processor
 from Algorithm import Algorithm
-import time
 from queue import PriorityQueue
+
+import json
 
 
 class Sim:
@@ -18,7 +13,40 @@ class Sim:
         self.processors: List["Processor"] = []
 
     def read_data(self):
-        pass
+        input_file = open("input.json")
+        data = json.load(input_file)
+
+        tasks_json = data["Tasks"]
+        processors_json = data["Processors"]
+
+        # to connect a task name to its object, improves efficiency
+        # when adding in and out degrees
+        temp = {}
+
+        # create all tasks
+        for task_name in tasks_json:
+            task_info = tasks_json[task_name]
+            task = Task(
+                task_name,
+                task_info["duration"],
+                task_info["processor_type"],
+                [],
+                [],
+            )
+            self.tasks.append(task)
+            temp[task_name] = task
+
+        # add in and out degrees to the tasks
+        for task_name in tasks_json:
+            task_info = tasks_json[task_name]
+            blocking = [
+                temp[task_name_blocking] for task_name_blocking in task_info["blocking"]
+            ]
+            temp[task_name].blocking = blocking
+            # TODO: continue here
+
+        for task in self.tasks:
+            print(task.blocking)
 
     def start(self, algorithm: Algorithm):
         total_time = 0
@@ -68,7 +96,7 @@ class Sim:
 
     # temporary, maybe remove later
     def print_results(self):
-        for processor in self.processors_list:
+        for processor in self.processors:
             print(processor.name + ":\t")
             for task in processor.work_order:
                 print(task.name + "\t")
@@ -78,7 +106,6 @@ class Sim:
 def main():
     sim = Sim()
     sim.read_data()
-    sim.start()
 
 
 if __name__ == "__main__":
