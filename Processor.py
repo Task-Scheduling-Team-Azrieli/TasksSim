@@ -19,12 +19,16 @@ class Processor:
         self.current_task.processed_by = self
         self.current_task.being_processed = True
 
-    def task_finished(self):
+    def task_finished(self, ready_tasks):
         self.current_task.done = True
         self.current_task.processed_by = None
+
         # remove current task from all blocked_by lists of the tasks its blocking
+        # and update ready_tasks
         for task in self.current_task.blocking:
             task.blocked_by.remove(self.current_task)
+            if len(task.blocked_by) == 0:
+                ready_tasks.append(task)
 
         self.idle = True
         self.current_task = None

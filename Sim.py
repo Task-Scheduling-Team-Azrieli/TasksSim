@@ -1,7 +1,8 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from Task import Task
 from Processor import Processor
 from Algorithm import Algorithm
+from Greedy import Greedy
 from queue import PriorityQueue
 
 import json
@@ -17,11 +18,11 @@ class Sim:
         data = json.load(input_file)
 
         tasks_json = data["Tasks"]
-        processors_json = data["Processors"]
+        processors_json: List[str] = data["Processors"]
 
         # to connect a task name to its object, improves efficiency
         # when adding in and out degrees
-        temp = {}
+        temp: Dict[str, Task] = {}
 
         # create all tasks
         for task_name in tasks_json:
@@ -38,20 +39,30 @@ class Sim:
 
         # add in and out degrees to the tasks
         for task_name in tasks_json:
+            # add out-degrees
             task_info = tasks_json[task_name]
             blocking = [
                 temp[task_name_blocking] for task_name_blocking in task_info["blocking"]
             ]
             temp[task_name].blocking = blocking
-            # TODO: continue here
 
-        for task in self.tasks:
-            print(task.blocking)
+            # add in-degrees
+            for task in temp[task_name].blocking:
+                task.blocked_by.append(temp[task_name])
+
+        # read processors
+        for processor_str in processors_json:
+            processor_name = processor_str.split(":")[0]
+            processor_type = int(processor_str.split(":")[1])
+            processor = Processor(processor_name, processor_type)
+
+            if processor not in self.processors:
+                self.processors.append(processor)
 
     def start(self, algorithm: Algorithm):
         total_time = 0
         working_processors = []
-        idle_processors: List["Processor"] = self.processors_list.copy()
+        idle_processors: List["Processor"] = self.processors.copy()
 
         current_tasks: PriorityQueue[Tuple[int, Task]] = PriorityQueue()
         ready_tasks = [task for task in self.tasks if task.is_ready()]
@@ -84,7 +95,7 @@ class Sim:
 
             # free the processor and update in-degrees
             processor = done_task.processed_by
-            processor.task_finished()
+            processor.task_finished(ready_tasks)
 
             # update working/idle processors
             working_processors.remove(processor)
@@ -106,6 +117,9 @@ class Sim:
 def main():
     sim = Sim()
     sim.read_data()
+    algorithm = Greedy(sim.tasks, sim.processors)
+    sim.start(algorithm)
+    sim.print_results()
 
 
 if __name__ == "__main__":
