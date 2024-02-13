@@ -67,32 +67,31 @@ class Sim:
         current_tasks: PriorityQueue[Tuple[int, Task]] = PriorityQueue()
         ready_tasks = [task for task in self.tasks if task.is_ready()]
 
-        def match_ready_tasks():
+        def match_ready_tasks(current_time):
+            algorithm.update_lists(idle_processors, ready_tasks)
+            ready_tasks_order = algorithm.decide()
             for task in ready_tasks_order:
-                for processor in idle_processors:
-                    if processor.type == task.processor_type:
+                for processor in self.processors:
+                    if processor.type == task.processor_type and processor.idle:
                         # work on the task
                         processor.work_on_task(task)
+                        task.end_time = current_time + task.duration 
 
                         # update processor lists
                         working_processors.append(processor)
                         idle_processors.remove(processor)
 
                         # update task lists
-                        current_tasks.put((task.duration, task))
+                        current_tasks.put((task.end_time, task))
                         ready_tasks.remove(task)
 
         # init - assign all the tasks you can
-        algorithm.update_lists(self.processors, ready_tasks)
-        ready_tasks_order = algorithm.decide()
-        match_ready_tasks()
+        match_ready_tasks(0)
 
         # main loop
         while len(self.tasks) > 0:
             # pop the first task to finish
-            duration, done_task = current_tasks.get()
-            total_time += duration
-            done_task.end_time = total_time
+            current_time, done_task = current_tasks.get()
 
             # free the processor and update in-degrees
             processor = done_task.processed_by
@@ -104,7 +103,7 @@ class Sim:
 
             self.tasks.remove(done_task)
 
-            match_ready_tasks()
+            match_ready_tasks(current_time)
 
     # temporary, maybe remove later
     def print_results(self):

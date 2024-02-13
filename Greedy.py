@@ -10,4 +10,5 @@ class Greedy(Algorithm):
 
     # simply returns the order that was given, since the greedy doesn't care
     def decide(self):
-        return self.ready_tasks
+        result = self.ready_tasks.copy()
+        return result
