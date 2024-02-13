@@ -85,6 +85,9 @@ class Sim:
                         current_tasks.put((task.end_time, task))
                         ready_tasks.remove(task)
 
+                        # a task can only run on one processor
+                        break
+
         # init - assign all the tasks you can
         match_ready_tasks(0)
 
