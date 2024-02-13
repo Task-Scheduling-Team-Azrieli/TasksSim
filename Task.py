@@ -16,6 +16,7 @@ class Task:
         self.name = name
         self.processor_type = processor_type
         self.duration = duration
+        self.end_time = 0
         self.done = False
         self.processed_by: Processor = None
         self.blocking = blocking

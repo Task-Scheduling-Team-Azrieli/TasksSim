@@ -92,6 +92,7 @@ class Sim:
             # pop the first task to finish
             duration, done_task = current_tasks.get()
             total_time += duration
+            done_task.end_time = total_time
 
             # free the processor and update in-degrees
             processor = done_task.processed_by
@@ -110,7 +111,7 @@ class Sim:
         for processor in self.processors:
             print(processor.name + ":\t")
             for task in processor.work_order:
-                print(task.name + "\t")
+                print(task.name + ":\t" + str(task.end_time))
             print("\n")
 
 
