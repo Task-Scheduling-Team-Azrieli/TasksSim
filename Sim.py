@@ -4,6 +4,7 @@ from Processor import Processor
 from Algorithm import Algorithm
 from Greedy import Greedy
 from queue import PriorityQueue
+from TimeLineIlustration import TimeLineIlustartion
 
 import json
 
@@ -66,6 +67,7 @@ class Sim:
 
         current_tasks: PriorityQueue[Tuple[int, Task]] = PriorityQueue()
         ready_tasks = [task for task in self.tasks if task.is_ready()]
+        timeLineIlustartor = TimeLineIlustartion(self.processors)
 
         def match_ready_tasks(current_time):
             algorithm.update_lists(idle_processors, ready_tasks)
@@ -99,7 +101,10 @@ class Sim:
             # free the processor and update in-degrees
             processor = done_task.processed_by
             processor.task_finished(ready_tasks)
-
+            
+            # add to time line
+            timeLineIlustartor.add_to_timeline(processor, done_task, current_time-done_task.duration)
+            
             # update working/idle processors
             working_processors.remove(processor)
             idle_processors.append(processor)
@@ -107,6 +112,7 @@ class Sim:
             self.tasks.remove(done_task)
 
             match_ready_tasks(current_time)
+        timeLineIlustartor.show()
 
     # temporary, maybe remove later
     def print_results(self):
