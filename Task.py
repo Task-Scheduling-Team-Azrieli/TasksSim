@@ -16,19 +16,26 @@ class Task:
         self.name = name
         self.processor_type = processor_type
         self.duration = duration
+        self.end_time = 0
         self.done = False
-        self.being_processed = False
+        self.processed_by: Processor = None
         self.blocking = blocking
         self.blocked_by = blocked_by
 
     def is_ready(self):
-        return not self.blocked_by and not self.done and not self.being_processed
+        return not self.blocked_by and not self.done and self.processed_by == None
 
     def is_blocked(self):
         return self.blocked_by and not self.done
+    
+    # insert a task that i am (self) blocking
+    def insert_blocking(self, task: "Task"):
+        self.blocking.append(task)
+        if (self not in task.blocked_by):
+            task.blocked_by.append(self)
 
-    def remove_from_blocks(self, task: "Task"):
-        self.blocks = [t for t in self.blocks if t.name != task.name]
-
-    def remove_from_blocked_by(self, task):
-        self.blocked_by = [t for t in self.blocked_by if t.name != task.name]
+    # insert a task that i am (self) blocked by
+    def insert_blocked_by(self, task: "Task"):
+        self.blocked_by.append(task)
+        if (self not in task.blocking):
+            task.blocking.append(self)
