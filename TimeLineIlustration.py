@@ -17,15 +17,23 @@ class TimeLineIlustartion:
     def show(self):
         print(self.timeLines)
         plt.figure(figsize=(10, len(self.timeLines) * 2))  # Adjust figure size based on number of timelines
-
         for i, (processor, timeline) in enumerate(self.timeLines.items(), 1):
             plt.subplot(len(self.timeLines), 1, i)
             plt.title(f'Timeline for {processor}')
             plt.xlabel('Time')
             plt.ylabel('Tasks')
 
+            # Calculate y-coordinate for the current timeline
+            y = len(self.timeLines) - i
+
             for task_name, start_time, end_time in timeline:
-                plt.plot([start_time, end_time], [task_name, task_name], marker='o')
+                # Plot a rectangle for each task
+                plt.fill_betweenx([y - 0.4, y + 0.4], start_time, end_time, color='skyblue', alpha=0.5)
+                # Add text for the task name
+                plt.text((start_time + end_time) / 2, y, task_name, ha='center', va='center')
+
+            # Set y-ticks and y-tick labels
+            plt.yticks([y], [processor])
 
         plt.tight_layout()
         plt.show()
