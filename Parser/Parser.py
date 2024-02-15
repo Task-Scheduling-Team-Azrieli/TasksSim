@@ -41,13 +41,15 @@ class Parser:
                     break
 
             if not processor_exists:
+                processor.name = f"{processor.type}{processor.name}"
+                processor.type = self.processor_types.index(processor.type)
                 self.processors.append(processor)
 
             task = Task(
                 split[0],
                 split[2],
                 split[3],
-                self.processor_types.index(processor.type),
+                processor.type,
                 self.extract_blocking_tasks(split[-1]),
             )
             self.tasks.append(task)
@@ -70,6 +72,7 @@ class Parser:
 def main():
     parser = Parser()
     parser.parse_prof("Parser/Data/gsf.-00001.prof")
+    print("A")
 
 
 if __name__ == "__main__":
