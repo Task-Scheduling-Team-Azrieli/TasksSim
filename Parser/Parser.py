@@ -27,15 +27,11 @@ class Parser:
         self.processors: List[Processor] = []
         self.processor_types: List[str] = []
 
-    def parse_prof(self, filename):
+    def read_prof(self, filename):
         file = open(filename, "r")
         for line in file.readlines():
             split = line.split("|")
             processor = self.extract_processor_info(split[1])
-
-            # add unique processor types
-            if processor.type not in self.processor_types:
-                self.processor_types.append(processor.type)
 
             # add only unique processors
             processor_exists = False
@@ -45,10 +41,9 @@ class Parser:
                     break
 
             if not processor_exists:
-                processor.name = f"{processor.type}{processor.name}"
-                processor.type = self.processor_types.index(processor.type)
                 self.processors.append(processor)
 
+            # add task
             task = Task(
                 split[0],
                 float(split[2]),
@@ -83,7 +78,14 @@ class Parser:
         processor_type = match.group(1)
         processor_name = match.group(2)
 
-        return Processor(processor_name, processor_type)
+        # add unique processor types
+        if processor_type not in self.processor_types:
+            self.processor_types.append(processor_type)
+
+        return Processor(
+            f"{processor_type}{processor_name}",
+            self.processor_types.index(processor_type),
+        )
 
     def extract_blocking_tasks(self, text):
         pattern = re.compile(r"'(.*?)'")
@@ -93,7 +95,7 @@ class Parser:
 
 def main():
     parser = Parser()
-    parser.parse_prof("Parser/Data/gsf.-00001.prof")
+    parser.read_prof("Parser/Data/gsf.-00001.prof")
     parser.to_json("input.json", PRIORITY_ZERO)
 
 

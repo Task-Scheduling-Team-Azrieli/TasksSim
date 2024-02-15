@@ -75,7 +75,7 @@ class Sim:
                     if processor.type == task.processor_type and processor.idle:
                         # work on the task
                         processor.work_on_task(task)
-                        task.end_time = current_time + task.duration 
+                        task.end_time = current_time + task.duration
 
                         # update processor lists
                         working_processors.append(processor)
@@ -111,10 +111,11 @@ class Sim:
     # temporary, maybe remove later
     def print_results(self):
         for processor in self.processors:
-            print(processor.name + ":\t")
-            for task in processor.work_order:
-                print(task.name + ":\t" + str(task.end_time))
-            print("\n")
+            if processor.work_order:
+                print(f"{processor.name} type {processor.type}\t")
+                for task in processor.work_order:
+                    print(task.name + ":\t" + str(task.end_time))
+                print("\n")
 
 
 def main():

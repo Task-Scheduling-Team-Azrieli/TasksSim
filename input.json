@@ -3546,5 +3546,22 @@
             "blocking": []
         }
     },
-    "Processors": {}
+    "Processors": [
+        "MIPS4:0",
+        "MIPS7:0",
+        "MIPS3:0",
+        "MIPS1:0",
+        "MIPS5:0",
+        "VMP0:1",
+        "VMP1:1",
+        "VMP2:1",
+        "VMP3:1",
+        "MPC0:2",
+        "MPC1:2",
+        "MPC2:2",
+        "MPC3:2",
+        "MPC4:2",
+        "PMA0:3",
+        "PMA1:3"
+    ]
 }
