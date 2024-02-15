@@ -95,6 +95,7 @@ class Sim:
         while len(self.tasks) > 0:
             # pop the first task to finish
             current_time, done_task = current_tasks.get()
+            total_time += done_task.duration
 
             # free the processor and update in-degrees
             processor = done_task.processed_by
@@ -108,22 +109,24 @@ class Sim:
 
             match_ready_tasks(current_time)
 
+        return total_time
+
     # temporary, maybe remove later
     def print_results(self):
         for processor in self.processors:
-            if processor.work_order:
-                print(f"{processor.name} type {processor.type}\t")
-                for task in processor.work_order:
-                    print(task.name + ":\t" + str(task.end_time))
-                print("\n")
+            print(f"{processor.name} type {processor.type}\t")
+            for task in processor.work_order:
+                print(task.name + ":\t" + str(task.end_time))
+            print("\n")
 
 
 def main():
     sim = Sim()
     sim.read_data()
     algorithm = Greedy(sim.tasks, sim.processors)
-    sim.start(algorithm)
+    total_time = sim.start(algorithm)
     sim.print_results()
+    print(f"Total Time: {total_time}")
 
 
 if __name__ == "__main__":
