@@ -51,7 +51,7 @@ class Parser:
 
             task = Task(
                 split[0],
-                split[2],
+                float(split[2]),
                 int(split[3]),
                 processor.type,
                 self.extract_blocking_tasks(split[-1]),
@@ -62,12 +62,17 @@ class Parser:
 
     def to_json(self, filename, priority):
         # create dictionary data
-        data = {"Tasks": {}, "Processors": {}}
+        data = {"Tasks": {}, "Processors": []}
+        # tasks
         for task in [t for t in self.tasks if t.priority == priority]:
             data["Tasks"][task.name] = {}
             data["Tasks"][task.name]["duration"] = task.duration
             data["Tasks"][task.name]["processor_type"] = task.processor_type
             data["Tasks"][task.name]["blocking"] = task.blocking
+
+        # processors
+        for processor in self.processors:
+            data["Processors"].append(f"{processor.name}:{processor.type}")
 
         # dump dictionary to json file
         with open(filename, "w") as json_file:
