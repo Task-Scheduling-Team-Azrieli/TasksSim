@@ -1,5 +1,9 @@
 import re
 from typing import List
+import json
+
+PRIORITY_ZERO = 0
+PRIORITY_ONE = 1
 
 
 class Task:
@@ -48,13 +52,26 @@ class Parser:
             task = Task(
                 split[0],
                 split[2],
-                split[3],
+                int(split[3]),
                 processor.type,
                 self.extract_blocking_tasks(split[-1]),
             )
             self.tasks.append(task)
 
         file.close()
+
+    def to_json(self, filename, priority):
+        # create dictionary data
+        data = {"Tasks": {}, "Processors": {}}
+        for task in [t for t in self.tasks if t.priority == priority]:
+            data["Tasks"][task.name] = {}
+            data["Tasks"][task.name]["duration"] = task.duration
+            data["Tasks"][task.name]["processor_type"] = task.processor_type
+            data["Tasks"][task.name]["blocking"] = task.blocking
+
+        # dump dictionary to json file
+        with open(filename, "w") as json_file:
+            json.dump(data, json_file)
 
     def extract_processor_info(self, text):
         match = re.match(r"\('(\w+)', (\d+)\)", text)
@@ -72,7 +89,7 @@ class Parser:
 def main():
     parser = Parser()
     parser.parse_prof("Parser/Data/gsf.-00001.prof")
-    print("A")
+    parser.to_json("input.json", PRIORITY_ZERO)
 
 
 if __name__ == "__main__":
