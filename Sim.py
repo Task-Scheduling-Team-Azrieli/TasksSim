@@ -8,6 +8,8 @@ from TimeLineIlustration import TimeLineIlustartion
 
 import json
 
+from TimeLineIlustration import TimeLineIlustartion
+
 
 class Sim:
     def __init__(self):
@@ -77,7 +79,7 @@ class Sim:
                     if processor.type == task.processor_type and processor.idle:
                         # work on the task
                         processor.work_on_task(task)
-                        task.end_time = current_time + task.duration 
+                        task.end_time = current_time + task.duration
 
                         # update processor lists
                         working_processors.append(processor)
@@ -97,14 +99,16 @@ class Sim:
         while len(self.tasks) > 0:
             # pop the first task to finish
             current_time, done_task = current_tasks.get()
+            total_time += done_task.duration
 
             # free the processor and update in-degrees
             processor = done_task.processed_by
             processor.task_finished(ready_tasks)
-            
+
             # add to time line
-            timeLineIlustartor.add_to_timeline(processor, done_task, current_time-done_task.duration)
-            
+            timeLineIlustartor.add_to_timeline(
+                processor, done_task, current_time - done_task.duration
+            )
             # update working/idle processors
             working_processors.remove(processor)
             idle_processors.append(processor)
@@ -114,10 +118,14 @@ class Sim:
             match_ready_tasks(current_time)
         timeLineIlustartor.show()
 
+        timeLineIlustartor.show()
+
+        return total_time
+
     # temporary, maybe remove later
     def print_results(self):
         for processor in self.processors:
-            print(processor.name + ":\t")
+            print(f"{processor.name} type {processor.type}\t")
             for task in processor.work_order:
                 print(task.name + ":\t" + str(task.end_time))
             print("\n")
@@ -127,8 +135,9 @@ def main():
     sim = Sim()
     sim.read_data()
     algorithm = Greedy(sim.tasks, sim.processors)
-    sim.start(algorithm)
+    total_time = sim.start(algorithm)
     sim.print_results()
+    print(f"Total Time: {total_time}")
 
 
 if __name__ == "__main__":

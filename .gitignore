@@ -1,2 +1,5 @@
 .vscode/
 __pycache__/
+Parser/Data/gsf_prof.py
+*.prof
+*.out
