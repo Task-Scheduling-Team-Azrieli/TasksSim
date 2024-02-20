@@ -4,6 +4,7 @@ from Processor import Processor
 from Algorithm import Algorithm
 from Greedy import Greedy
 from queue import PriorityQueue
+from TimeLineIlustration import TimeLineIlustartion
 
 import json
 
@@ -108,7 +109,6 @@ class Sim:
             timeLineIlustartor.add_to_timeline(
                 processor, done_task, current_time - done_task.duration
             )
-
             # update working/idle processors
             working_processors.remove(processor)
             idle_processors.append(processor)
@@ -116,6 +116,7 @@ class Sim:
             self.tasks.remove(done_task)
 
             match_ready_tasks(current_time)
+        timeLineIlustartor.show()
 
         timeLineIlustartor.show()
 
