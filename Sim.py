@@ -116,7 +116,6 @@ class Sim:
             self.tasks.remove(done_task)
 
             match_ready_tasks(current_time)
-        timeLineIlustartor.show()
 
         timeLineIlustartor.show()
 
