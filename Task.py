@@ -8,7 +8,7 @@ class Task:
     def __init__(
         self,
         name: str,
-        duration: int,
+        duration: float,
         processor_type: int,
         blocking: List["Task"],
         blocked_by: List["Task"],
