@@ -96,10 +96,12 @@ class Sim:
         match_ready_tasks(0)
 
         # main loop
+        final_end_time = 0
         while len(self.tasks) > 0:
             # pop the first task to finish
             current_time, done_task = current_tasks.get()
             total_time += done_task.duration
+            final_end_time = done_task.end_time
 
             # free the processor and update in-degrees
             processor = done_task.processed_by
@@ -119,14 +121,21 @@ class Sim:
 
         timeLineIlustartor.show()
 
-        return total_time
+        return total_time, final_end_time
 
     # temporary, maybe remove later
     def print_results(self):
         for processor in self.processors:
+            task_index = 0
             print(f"{processor.name} type {processor.type}\t")
             for task in processor.work_order:
-                print(task.name + ":\t" + str(task.end_time))
+                print(
+                    f"task #{task_index}"
+                    + ":\t start time: "
+                    + f"{task.end_time - task.duration}\t\t"
+                    + f"duration: {task.duration}"
+                )
+                task_index += 1
             print("\n")
 
 
@@ -134,9 +143,10 @@ def main():
     sim = Sim()
     sim.read_data()
     algorithm = Greedy(sim.tasks, sim.processors)
-    total_time = sim.start(algorithm)
+    total_time, end_time = sim.start(algorithm)
     sim.print_results()
-    print(f"Total Time: {total_time}")
+    print(f"Total duration of all tasks: {total_time}")
+    print(f"Total time to run all tasks: {end_time}")
 
 
 if __name__ == "__main__":
