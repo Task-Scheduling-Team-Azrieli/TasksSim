@@ -146,7 +146,7 @@ def main():
     total_time, end_time = sim.start(algorithm)
     sim.print_results()
     print(f"Total duration of all tasks: {total_time}")
-    print(f"Total time to run all tasks: {end_time}")
+    print(f"End time greedy: {end_time}")
 
 
 if __name__ == "__main__":
