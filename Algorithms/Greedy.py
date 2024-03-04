@@ -1,6 +1,6 @@
 from typing import List
 from Task import Task
-from Algorithm import Algorithm
+from Algorithms.Algorithm import Algorithm
 from Processor import Processor
 
 

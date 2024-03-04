@@ -1,14 +1,12 @@
 from typing import List, Tuple, Dict
 from Task import Task
 from Processor import Processor
-from Algorithm import Algorithm
-from Greedy import Greedy
+from Algorithms.Algorithm import Algorithm
+from Algorithms.Greedy import Greedy
 from queue import PriorityQueue
 from TimeLineIlustration import TimeLineIlustartion
 
 import json
-
-from TimeLineIlustration import TimeLineIlustartion
 
 
 class Sim:
