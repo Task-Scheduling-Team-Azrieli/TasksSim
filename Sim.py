@@ -3,6 +3,7 @@ from Task import Task
 from Processor import Processor
 from Algorithms.Algorithm import Algorithm
 from Algorithms.Greedy import Greedy
+from Algorithms.GreedyHeuristics import OutDegreesFirst
 from queue import PriorityQueue
 from TimeLineIlustration import TimeLineIlustartion
 
@@ -13,6 +14,9 @@ class Sim:
     def __init__(self):
         self.tasks: List["Task"] = []
         self.processors: List["Processor"] = []
+
+        self.total_time = 0
+        self.final_end_time = 0
 
     def read_data(self):
         input_file = open("input.json")
@@ -61,7 +65,6 @@ class Sim:
                 self.processors.append(processor)
 
     def start(self, algorithm: Algorithm):
-        total_time = 0
         working_processors = []
         idle_processors: List["Processor"] = self.processors.copy()
 
@@ -94,12 +97,11 @@ class Sim:
         match_ready_tasks(0)
 
         # main loop
-        final_end_time = 0
         while len(self.tasks) > 0:
             # pop the first task to finish
             current_time, done_task = current_tasks.get()
-            total_time += done_task.duration
-            final_end_time = done_task.end_time
+            self.total_time += done_task.duration
+            self.final_end_time = done_task.end_time
 
             # free the processor and update in-degrees
             processor = done_task.processed_by
@@ -119,7 +121,7 @@ class Sim:
 
         timeLineIlustartor.show()
 
-        return total_time, final_end_time
+        return self.total_time, self.final_end_time
 
     # temporary, maybe remove later
     def print_results(self):
@@ -136,15 +138,25 @@ class Sim:
                 task_index += 1
             print("\n")
 
+    def __str__(self):
+        return f"Total Time: {self.total_time}\nEnd Time: {self.final_end_time}\n"
 
-def main():
+
+def run_sim(algorithm: Algorithm, print_results=False):
     sim = Sim()
     sim.read_data()
-    algorithm = Greedy(sim.tasks, sim.processors)
-    total_time, end_time = sim.start(algorithm)
-    sim.print_results()
-    print(f"Total duration of all tasks: {total_time}")
-    print(f"End time greedy: {end_time}")
+    sim.start(algorithm(sim.tasks, sim.processors))
+    if print_results:
+        sim.print_results()
+
+    return sim
+
+
+def main():
+    print("Greedy:")
+    print(run_sim(Greedy))
+    print("Out degrees first:")
+    print(run_sim(OutDegreesFirst))
 
 
 if __name__ == "__main__":
