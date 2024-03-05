@@ -9,6 +9,7 @@ class Greedy(Algorithm):
         super().__init__(ready_tasks, processors)
 
     # simply returns the order that was given, since the greedy doesn't care
+    # gives priority 0 tasks a precedence 
     def decide(self):
-        result = self.ready_tasks.copy()
+        result = sorted(self.ready_tasks, key=lambda task: task.priority)
         return result

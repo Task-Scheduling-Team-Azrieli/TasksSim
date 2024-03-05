@@ -10,6 +10,7 @@ class Task:
         name: str,
         duration: float,
         processor_type: int,
+        priority: int,
         blocking: List["Task"],
         blocked_by: List["Task"],
     ):
@@ -21,21 +22,22 @@ class Task:
         self.processed_by: Processor = None
         self.blocking = blocking
         self.blocked_by = blocked_by
+        self.priority = priority
 
     def is_ready(self):
         return not self.blocked_by and not self.done and self.processed_by == None
 
     def is_blocked(self):
         return self.blocked_by and not self.done
-    
+
     # insert a task that i am (self) blocking
     def insert_blocking(self, task: "Task"):
         self.blocking.append(task)
-        if (self not in task.blocked_by):
+        if self not in task.blocked_by:
             task.blocked_by.append(self)
 
     # insert a task that i am (self) blocked by
     def insert_blocked_by(self, task: "Task"):
         self.blocked_by.append(task)
-        if (self not in task.blocking):
+        if self not in task.blocking:
             task.blocking.append(self)

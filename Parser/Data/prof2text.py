@@ -23,13 +23,12 @@ def main():
                             #     file=f,
                             # )
                             print(
-                                f"{r.name}|{r.line}|{r.start}|{r.end}|{r.priority}|{[d.name for d in r.dep]}",
+                                f"{r.name}|{r.line}|{r.end - r.start}|{r.priority}|{[d.name for d in r.dep]}",
                                 file=f,
                             )
                         traverse(node.children)
 
                 traverse(records.time_range_tree())
-                return
 
 
 main()

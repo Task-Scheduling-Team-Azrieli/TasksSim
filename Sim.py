@@ -1,4 +1,3 @@
-from typing import List, Tuple, Dict
 from Task import Task
 from Processor import Processor
 from Algorithms.Algorithm import Algorithm
@@ -7,7 +6,9 @@ from Algorithms.GreedyHeuristics import OutDegreesFirst
 from queue import PriorityQueue
 from TimeLineIlustration import TimeLineIlustartion
 
+from typing import List, Tuple, Dict
 import json
+import os
 
 
 class Sim:
@@ -18,8 +19,14 @@ class Sim:
         self.total_time = 0
         self.final_end_time = 0
 
-    def read_data(self):
-        input_file = open("input.json")
+    def read_data(self, file_path: str):
+        """reads data from a json file to objects (tasks, processors) in this class
+
+        Args:
+            file_path (str): full path to the file to read the data from
+        """
+        print(file_path)
+        input_file = open(file_path)
         data = json.load(input_file)
 
         tasks_json = data["Tasks"]
@@ -36,6 +43,7 @@ class Sim:
                 task_name,
                 task_info["duration"],
                 task_info["processor_type"],
+                task_info["priority"],
                 [],
                 [],
             )
@@ -46,6 +54,7 @@ class Sim:
         for task_name in tasks_json:
             # add out-degrees
             task_info = tasks_json[task_name]
+
             blocking = [
                 temp[task_name_blocking] for task_name_blocking in task_info["blocking"]
             ]
@@ -64,13 +73,23 @@ class Sim:
             if processor not in self.processors:
                 self.processors.append(processor)
 
-    def start(self, algorithm: Algorithm):
+    def start(self, algorithm: Algorithm, illustration=False):
+        """starts the simulation, matches tasks for processors
+
+        Args:
+            algorithm (Algorithm): the algorithm to apply the order of tasks
+            illustration (bool, optional): adds an illustration to the sim. Defaults to False.
+
+        Returns:
+            (float, int): total duration of all tasks, final end time of all tasks
+        """
         working_processors = []
         idle_processors: List["Processor"] = self.processors.copy()
 
         current_tasks: PriorityQueue[Tuple[int, Task]] = PriorityQueue()
         ready_tasks = [task for task in self.tasks if task.is_ready()]
-        timeLineIlustartor = TimeLineIlustartion(self.processors)
+        if illustration:
+            timeLineIlustartor = TimeLineIlustartion(self.processors)
 
         def match_ready_tasks(current_time):
             algorithm.update_lists(idle_processors, ready_tasks)
@@ -108,9 +127,11 @@ class Sim:
             processor.task_finished(ready_tasks)
 
             # add to time line
-            timeLineIlustartor.add_to_timeline(
-                processor, done_task, current_time - done_task.duration
-            )
+            if illustration:
+                timeLineIlustartor.add_to_timeline(
+                    processor, done_task, current_time - done_task.duration
+                )
+
             # update working/idle processors
             working_processors.remove(processor)
             idle_processors.append(processor)
@@ -119,44 +140,57 @@ class Sim:
 
             match_ready_tasks(current_time)
 
-        timeLineIlustartor.show()
+        if illustration:
+            timeLineIlustartor.show()
 
         return self.total_time, self.final_end_time
-
-    # temporary, maybe remove later
-    def print_results(self):
-        for processor in self.processors:
-            task_index = 0
-            print(f"{processor.name} type {processor.type}\t")
-            for task in processor.work_order:
-                print(
-                    f"task #{task_index}"
-                    + ":\t start time: "
-                    + f"{task.end_time - task.duration}\t\t"
-                    + f"duration: {task.duration}"
-                )
-                task_index += 1
-            print("\n")
 
     def __str__(self):
         return f"Total Time: {self.total_time}\nEnd Time: {self.final_end_time}\n"
 
 
-def run_sim(algorithm: Algorithm, print_results=False):
+def run_sim_once(
+    algorithm: Algorithm, file_path: str, print_results=False, illustration=False
+):
     sim = Sim()
-    sim.read_data()
-    sim.start(algorithm(sim.tasks, sim.processors))
+    sim.read_data(file_path)
+    sim.start(algorithm(sim.tasks, sim.processors), illustration=illustration)
     if print_results:
         sim.print_results()
 
     return sim
 
 
+def run_sim_all(
+    algorithm: Algorithm,
+    folder_path: str,
+    print_average=True,
+    print_results=False,
+    illustration=False,
+):
+    total_end_time = 0
+    count = 0
+    for filename in os.listdir(folder_path):
+        sim = run_sim_once(
+            algorithm,
+            f"{folder_path}/{filename}",
+            print_results=print_results,
+            illustration=illustration,
+        )
+        total_end_time += sim.final_end_time
+        count += 1
+
+    average_end_time = total_end_time / count
+    print(f"Average End Time For {type(algorithm)}: {average_end_time}")
+
+
 def main():
     print("Greedy:")
-    print(run_sim(Greedy))
-    print("Out degrees first:")
-    print(run_sim(OutDegreesFirst))
+    # run_sim_all(
+    #     Greedy,
+    #     "Parser/Data/parsed",
+    # )
+    run_sim_once(Greedy, "Parser/Data/parsed/gsf.000001.prof.json", illustration=True)
 
 
 if __name__ == "__main__":
