@@ -16,6 +16,8 @@ class Sim:
         self.tasks: List["Task"] = []
         self.processors: List["Processor"] = []
 
+        self.algorithm = None
+
         self.total_time = 0
         self.final_end_time = 0
 
@@ -83,10 +85,11 @@ class Sim:
         Returns:
             (float, int): total duration of all tasks, final end time of all tasks
         """
+        self.algorithm = algorithm
         working_processors = []
         idle_processors: List["Processor"] = self.processors.copy()
 
-        current_tasks: PriorityQueue[Tuple[int, Task]] = PriorityQueue()
+        current_tasks: PriorityQueue[Tuple[float, Task]] = PriorityQueue()
         ready_tasks = [task for task in self.tasks if task.is_ready()]
         if illustration:
             timeLineIlustartor = TimeLineIlustartion(self.processors)
@@ -146,7 +149,9 @@ class Sim:
         return self.total_time, self.final_end_time
 
     def __str__(self):
-        return f"Total Time: {self.total_time}\nEnd Time: {self.final_end_time}\n"
+        return (
+            f"{self.algorithm.__class__.__qualname__} End Time: {self.final_end_time}\n"
+        )
 
 
 def run_sim_once(
@@ -164,6 +169,7 @@ def run_sim_once(
 def run_sim_all(
     algorithm: Algorithm,
     folder_path: str,
+    output_file: str,
     print_average=True,
     print_results=False,
     illustration=False,
@@ -181,16 +187,34 @@ def run_sim_all(
         count += 1
 
     average_end_time = total_end_time / count
-    print(f"Average End Time For {type(algorithm)}: {average_end_time}")
+
+    print(f"Average End Time For {algorithm.__qualname__}: {average_end_time}")
+
+    with open("Results.txt", "a") as file:
+        file.write(
+            f"Average End Time For {algorithm.__qualname__}: {average_end_time}\n"
+        )
+
+    return average_end_time
 
 
 def main():
-    print("Greedy:")
-    # run_sim_all(
-    #     Greedy,
-    #     "Parser/Data/parsed",
-    # )
-    run_sim_once(Greedy, "Parser/Data/parsed/gsf.000001.prof.json", illustration=True)
+    # output_file = "Results.txt"
+    # print("OutDegreesFirst:")
+    # run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file)
+
+    print(
+        run_sim_once(
+            Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
+        )
+    )
+    print(
+        run_sim_once(
+            OutDegreesFirst,
+            "Parser/Data/parsed/gsf.000390.prof.json",
+            illustration=False,
+        )
+    )
 
 
 if __name__ == "__main__":

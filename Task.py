@@ -41,3 +41,12 @@ class Task:
         self.blocked_by.append(task)
         if self not in task.blocking:
             task.blocking.append(self)
+
+    # Define custom comparison logic
+    def __lt__(self, other):
+        # if priorities are equal, return False to indicate no preference
+        # otherwise, compare based on priority
+        if self.priority == other.priority:
+            return False
+        else:
+            return self.priority < other.priority
