@@ -18,11 +18,18 @@ class Task:
         self.processor_type = processor_type
         self.duration = duration
         self.end_time = 0
-        self.done = False
         self.processed_by: Processor = None
+        self.priority = priority
+        # whether a task has stopped running
+        self.done = False
+
+        # In and Out degrees
         self.blocking = blocking
         self.blocked_by = blocked_by
-        self.priority = priority
+
+        # Latest/Earliest start time (LS and ES)
+        self.es = 0
+        self.ls = 0
 
     def is_ready(self):
         return not self.blocked_by and not self.done and self.processed_by == None
