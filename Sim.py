@@ -152,20 +152,20 @@ class Sim:
         for task in sorted_tasks:
             es = 0
             for dependency in task.blocked_by:
-                es = max(es, dependency.end_time)
-            task.end_time = es + task.duration
+                es = max(es, dependency.es)
+            task.es = es + task.duration
 
         # calculate latest start time (LS) for each task
         for task in reversed(sorted_tasks):
             ls = float("inf")
             if not task.blocking:  # if task is a sink node
-                ls = task.end_time
+                ls = task.es
             for predecessor in task.blocked_by:
-                ls = min(ls, predecessor.end_time - predecessor.duration)
+                ls = min(ls, predecessor.es - predecessor.duration)
             task.ls = ls
 
         # identify critical path tasks
-        critical_path = [task for task in sorted_tasks if task.end_time == task.ls]
+        critical_path = [task for task in sorted_tasks if task.es == task.ls]
 
         return critical_path
 
@@ -255,7 +255,7 @@ def main():
 
     print(
         run_sim_once(
-            Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=True
+            Greedy, "Parser/Data/parsed/gsf.-00001.prof.json", illustration=True
         )
     )
     print(
