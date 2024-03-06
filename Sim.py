@@ -74,6 +74,8 @@ class Sim:
             if processor not in self.processors:
                 self.processors.append(processor)
 
+        self.timeLineIlustartor = TimeLineIlustartion(self.processors)
+
     def start(self, algorithm: Algorithm, illustration=False):
         """starts the simulation, matches tasks for processors
 
@@ -90,8 +92,6 @@ class Sim:
 
         current_tasks: PriorityQueue[Tuple[float, Task]] = PriorityQueue()
         ready_tasks = [task for task in self.tasks if task.is_ready()]
-        if illustration:
-            timeLineIlustartor = TimeLineIlustartion(self.processors)
 
         def match_ready_tasks(current_time):
             algorithm.update_lists(idle_processors, ready_tasks)
@@ -130,7 +130,7 @@ class Sim:
 
             # add to time line
             if illustration:
-                timeLineIlustartor.add_to_timeline(
+                self.timeLineIlustartor.add_to_timeline(
                     processor, done_task, current_time - done_task.duration
                 )
 
@@ -141,9 +141,6 @@ class Sim:
             self.tasks.remove(done_task)
 
             match_ready_tasks(current_time)
-
-        if illustration:
-            timeLineIlustartor.show()
 
         return self.total_time, self.final_end_time
 
@@ -160,7 +157,7 @@ class Sim:
 
         # calculate latest start time (LS) for each task
         for task in reversed(sorted_tasks):
-            ls = float('inf')
+            ls = float("inf")
             if not task.blocking:  # if task is a sink node
                 ls = task.end_time
             for predecessor in task.blocked_by:
@@ -171,6 +168,12 @@ class Sim:
         critical_path = [task for task in sorted_tasks if task.end_time == task.ls]
 
         return critical_path
+
+    def show_illustration(self):
+        self.timeLineIlustartor.show()
+
+    def set_critical_path(self, critical_path):
+        self.timeLineIlustartor.set_critical_path(critical_path)
 
     # helper function for find_critical_path
     def _topological_sort(self):
@@ -197,14 +200,18 @@ class Sim:
         )
 
 
-def run_sim_once(
-    algorithm: Algorithm, file_path: str, print_results=False, illustration=False
-):
+def run_sim_once(algorithm: Algorithm, file_path: str, illustration=False):
     sim = Sim()
     sim.read_data(file_path)
+
+    critical_path = sim.find_critical_path()
+    critical_path = [task.name for task in critical_path]
+
     sim.start(algorithm(sim.tasks, sim.processors), illustration=illustration)
-    if print_results:
-        sim.print_results()
+
+    if illustration:
+        sim.set_critical_path(critical_path)
+        sim.show_illustration()
 
     return sim
 
@@ -246,13 +253,9 @@ def main():
     # print("OutDegreesFirst:")
     # run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file)
 
-    sim = Sim()
-    sim.read_data("Parser/Data/parsed/gsf.000390.prof.json")
-    critical_path = sim.find_critical_path()
-
     print(
         run_sim_once(
-            Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
+            Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=True
         )
     )
     print(

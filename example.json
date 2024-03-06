@@ -3,6 +3,7 @@
         "A": {
             "duration": 3,
             "processor_type": 1,
+            "priority": 1,
             "blocking": [
                 "B",
                 "C"
@@ -11,6 +12,7 @@
         "B": {
             "duration": 2,
             "processor_type": 2,
+            "priority": 0,
             "blocking": [
                 "D",
                 "E"
@@ -19,6 +21,7 @@
         "C": {
             "duration": 1,
             "processor_type": 2,
+            "priority": 0,
             "blocking": [
                 "E",
                 "F"
@@ -27,6 +30,7 @@
         "D": {
             "duration": 5,
             "processor_type": 1,
+            "priority": 1,
             "blocking": [
                 "G"
             ]
@@ -34,6 +38,7 @@
         "E": {
             "duration": 9,
             "processor_type": 1,
+            "priority": 1,
             "blocking": [
                 "G"
             ]
@@ -41,6 +46,7 @@
         "F": {
             "duration": 3,
             "processor_type": 1,
+            "priority": 0,
             "blocking": [
                 "G"
             ]
@@ -48,6 +54,7 @@
         "G": {
             "duration": 4,
             "processor_type": 2,
+            "priority": 1,
             "blocking": []
         }
     },
