@@ -1,2 +1,3 @@
 Average End Time For Greedy: 111810820.45934632
 Average End Time For OutDegreesFirst: 100864882.02066858
+Average End Time For MinRuntimeFirst: 99199254.42253141

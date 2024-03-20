@@ -2,7 +2,11 @@ from Task import Task
 from Processor import Processor
 from Algorithms.Algorithm import Algorithm
 from Algorithms.Greedy import Greedy
-from Algorithms.GreedyHeuristics import OutDegreesFirst, MinRuntimeFirst, MaxRuntimeFirst
+from Algorithms.GreedyHeuristics import (
+    OutDegreesFirst,
+    MinRuntimeFirst,
+    MaxRuntimeFirst,
+)
 from queue import PriorityQueue
 from TimeLineIlustration import TimeLineIlustartion
 
@@ -221,7 +225,6 @@ def run_sim_all(
     folder_path: str,
     output_file: str,
     print_average=True,
-    print_results=False,
     illustration=False,
 ):
     total_end_time = 0
@@ -230,7 +233,6 @@ def run_sim_all(
         sim = run_sim_once(
             algorithm,
             f"{folder_path}/{filename}",
-            print_results=print_results,
             illustration=illustration,
         )
         total_end_time += sim.final_end_time
@@ -249,9 +251,9 @@ def run_sim_all(
 
 
 def main():
-    # output_file = "Results.txt"
+    output_file = "Results.txt"
     # print("OutDegreesFirst:")
-    # run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file)
+    run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file)
 
     # print(
     #     run_sim_once(
@@ -274,11 +276,7 @@ def main():
     #     )
     # )
 
-    print(
-        run_sim_once(
-            MaxRuntimeFirst, "Parser/Data/parsed/gsf.-00001.prof.json", illustration=True
-        )
-    )
+    # run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file)
 
     # print(
     #     run_sim_once(
