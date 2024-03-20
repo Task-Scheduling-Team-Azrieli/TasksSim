@@ -2,7 +2,7 @@ from Task import Task
 from Processor import Processor
 from Algorithms.Algorithm import Algorithm
 from Algorithms.Greedy import Greedy
-from Algorithms.GreedyHeuristics import OutDegreesFirst
+from Algorithms.GreedyHeuristics import OutDegreesFirst, MinRuntimeFirst, MaxRuntimeFirst
 from queue import PriorityQueue
 from TimeLineIlustration import TimeLineIlustartion
 
@@ -253,18 +253,40 @@ def main():
     # print("OutDegreesFirst:")
     # run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file)
 
+    # print(
+    #     run_sim_once(
+    #         MinRuntimeFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
+    #     )
+    # )
+    # print(
+    #     run_sim_once(
+    #         Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
+    #     )
+    # )
+    # print(
+    #     run_sim_once(
+    #         OutDegreesFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
+    #     )
+    # )
+    # print(
+    #     run_sim_once(
+    #         MaxRuntimeFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
+    #     )
+    # )
+
     print(
         run_sim_once(
-            Greedy, "Parser/Data/parsed/gsf.-00001.prof.json", illustration=True
+            MaxRuntimeFirst, "Parser/Data/parsed/gsf.-00001.prof.json", illustration=True
         )
     )
-    print(
-        run_sim_once(
-            OutDegreesFirst,
-            "Parser/Data/parsed/gsf.000390.prof.json",
-            illustration=False,
-        )
-    )
+
+    # print(
+    #     run_sim_once(
+    #         OutDegreesFirst,
+    #         "Parser/Data/parsed/gsf.000390.prof.json",
+    #         illustration=False,
+    #     )
+    # )
 
 
 if __name__ == "__main__":
