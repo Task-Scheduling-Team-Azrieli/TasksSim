@@ -36,7 +36,6 @@ class FromCriticalPath(Algorithm):
     def __init__(self, ready_tasks: List["Task"], processors: List["Processor"]):
         super().__init__(ready_tasks, processors)
 
-    # prioritize tasks with high amount of out-degrees
     def decide(self):
         def update_critical_time(node: Task):
             node.critical_time = (max([n.critical_time for n in node.out_tasks]) if len(node.blocking) > 0 else 0) + node.duration
