@@ -13,6 +13,7 @@ class Task:
         priority: int,
         blocking: List["Task"],
         blocked_by: List["Task"],
+        critical_time = 0
     ):
         self.name = name
         self.processor_type = processor_type
