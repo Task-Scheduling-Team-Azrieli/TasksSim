@@ -49,7 +49,7 @@ class MaxRuntimeFirst(Algorithm):
         return result
 
 class FromCriticalPath(Algorithm):
-    def __init__(self, ready_tasks: List["Task"], processors: List["Processor"]):
+    def __init__(self, ready_tasks: List["Task"], processors: List["Processor"], all_tasks: List["Processor"]):
         super().__init__(ready_tasks, processors)
 
     def decide(self):
@@ -60,9 +60,9 @@ class FromCriticalPath(Algorithm):
             for n in node.in_task:
                 update_critical_time(n)
         
-        end_tasks = [task for task in self.ready_tasks if len(task.blocking) == 0]
+        end_tasks = [task for task in self.all_tasks if len(task.blocking) == 0]
         for t in end_tasks:
             update_critical_time(t)
         
-        result = sorted(self.ready_tasks, key=lambda task: -task.critical_time)
+        result = sorted(self.all_tasks, key=lambda task: -task.critical_time)
         return result
