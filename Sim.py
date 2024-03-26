@@ -98,7 +98,7 @@ class Sim:
         ready_tasks = [task for task in self.tasks if task.is_ready()]
 
         def match_ready_tasks(current_time):
-            algorithm.update_lists(idle_processors, ready_tasks)
+            algorithm.update_lists(idle_processors, ready_tasks, self.tasks)
             ready_tasks_order = algorithm.decide()
             for task in ready_tasks_order:
                 for processor in self.processors:
@@ -211,7 +211,9 @@ def run_sim_once(algorithm: Algorithm, file_path: str, illustration=False):
     critical_path = sim.find_critical_path()
     critical_path = [task.name for task in critical_path]
 
-    sim.start(algorithm(sim.tasks, sim.processors), illustration=illustration)
+    sim.start(
+        algorithm(sim.tasks, sim.processors, sim.tasks), illustration=illustration
+    )
 
     if illustration:
         sim.set_critical_path(critical_path)
