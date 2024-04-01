@@ -10,8 +10,9 @@ class Greedy(Algorithm):
         ready_tasks: List["Task"],
         processors: List["Processor"],
         all_tasks: List["Task"],
+        offline: bool = False
     ):
-        super().__init__(ready_tasks, processors, all_tasks)
+        super().__init__(ready_tasks, processors, all_tasks, offline)
 
     # simply returns the order that was given, since the greedy doesn't care
     # gives priority 0 tasks a precedence
