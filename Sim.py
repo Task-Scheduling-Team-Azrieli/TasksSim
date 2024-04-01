@@ -6,6 +6,7 @@ from Algorithms.GreedyHeuristics import (
     OutDegreesFirst,
     MinRuntimeFirst,
     MaxRuntimeFirst,
+    FromCriticalPath,
 )
 from queue import PriorityQueue
 from TimeLineIlustration import TimeLineIlustartion
@@ -255,13 +256,13 @@ def run_sim_all(
 def main():
     output_file = "Results.txt"
     # print("OutDegreesFirst:")
-    run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file)
+    # run_sim_all(FromCriticalPath, "Parser/Data/parsed", output_file)
 
-    # print(
-    #     run_sim_once(
-    #         MinRuntimeFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
-    #     )
-    # )
+    print(
+        run_sim_once(
+            FromCriticalPath, "Parser/Data/parsed/gsf.000390.prof.json", illustration=True
+        )
+    )
     # print(
     #     run_sim_once(
     #         Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
