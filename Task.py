@@ -13,6 +13,7 @@ class Task:
         priority: int,
         blocking: List["Task"],
         blocked_by: List["Task"],
+        critical_time = 0
     ):
         self.name = name
         self.processor_type = processor_type
@@ -22,6 +23,7 @@ class Task:
         self.priority = priority
         # whether a task has stopped running
         self.done = False
+        self.critical_time = critical_time
 
         # In and Out degrees
         self.blocking = blocking

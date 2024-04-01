@@ -6,6 +6,7 @@ from Algorithms.GreedyHeuristics import (
     OutDegreesFirst,
     MinRuntimeFirst,
     MaxRuntimeFirst,
+    FromCriticalPath,
 )
 from queue import PriorityQueue
 from TimeLineIlustration import TimeLineIlustartion
@@ -97,9 +98,16 @@ class Sim:
         current_tasks: PriorityQueue[Tuple[float, Task]] = PriorityQueue()
         ready_tasks = [task for task in self.tasks if task.is_ready()]
 
+        # for offline algorithms
+        if algorithm.offline:
+            order = algorithm.calculate()
+
         def match_ready_tasks(current_time):
             algorithm.update_lists(idle_processors, ready_tasks, self.tasks)
-            ready_tasks_order = algorithm.decide()
+            if algorithm.offline:
+                ready_tasks_order = algorithm.decide(order)
+            else:
+                ready_tasks_order = algorithm.decide()
             for task in ready_tasks_order:
                 for processor in self.processors:
                     if processor.type == task.processor_type and processor.idle:
@@ -204,7 +212,9 @@ class Sim:
         )
 
 
-def run_sim_once(algorithm: Algorithm, file_path: str, illustration=False):
+def run_sim_once(
+    algorithm: Algorithm, file_path: str, illustration=False, offline=False
+):
     sim = Sim()
     sim.read_data(file_path)
 
@@ -212,7 +222,8 @@ def run_sim_once(algorithm: Algorithm, file_path: str, illustration=False):
     critical_path = [task.name for task in critical_path]
 
     sim.start(
-        algorithm(sim.tasks, sim.processors, sim.tasks), illustration=illustration
+        algorithm(sim.tasks, sim.processors, sim.tasks, offline),
+        illustration=illustration,
     )
 
     if illustration:
@@ -228,6 +239,7 @@ def run_sim_all(
     output_file: str,
     print_average=True,
     illustration=False,
+    offline=False,
 ):
     total_end_time = 0
     count = 0
@@ -236,7 +248,9 @@ def run_sim_all(
             algorithm,
             f"{folder_path}/{filename}",
             illustration=illustration,
+            offline=offline,
         )
+        print(f"done with {filename}")
         total_end_time += sim.final_end_time
         count += 1
 
@@ -254,12 +268,15 @@ def run_sim_all(
 
 def main():
     output_file = "Results.txt"
-    # print("OutDegreesFirst:")
-    run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file)
+    print("FromCriticalPath:")
+    run_sim_all(FromCriticalPath, "Parser/Data/parsed", output_file, offline=True)
 
     # print(
     #     run_sim_once(
-    #         MinRuntimeFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
+    #         FromCriticalPath,
+    #         "Parser/Data/parsed/gsf.000390.prof.json",
+    #         illustration=True,
+    #         offline=True,
     #     )
     # )
     # print(
