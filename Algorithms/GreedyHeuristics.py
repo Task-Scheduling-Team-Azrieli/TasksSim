@@ -10,8 +10,9 @@ class OutDegreesFirst(Algorithm):
         ready_tasks: List["Task"],
         processors: List["Processor"],
         all_tasks: List["Task"],
+        offline: bool = False,
     ):
-        super().__init__(ready_tasks, processors, all_tasks)
+        super().__init__(ready_tasks, processors, all_tasks, offline)
 
     # prioritize tasks with high amount of out-degrees
     def decide(self):
@@ -25,8 +26,9 @@ class MinRuntimeFirst(Algorithm):
         ready_tasks: List["Task"],
         processors: List["Processor"],
         all_tasks: List["Task"],
+        offline: bool = False,
     ):
-        super().__init__(ready_tasks, processors, all_tasks)
+        super().__init__(ready_tasks, processors, all_tasks, offline)
 
     # prioritize tasks with high amount of out-degrees
     def decide(self):
@@ -40,29 +42,44 @@ class MaxRuntimeFirst(Algorithm):
         ready_tasks: List["Task"],
         processors: List["Processor"],
         all_tasks: List["Task"],
+        offline: bool = False,
     ):
-        super().__init__(ready_tasks, processors, all_tasks)
+        super().__init__(ready_tasks, processors, all_tasks, offline)
 
     # prioritize tasks with high amount of out-degrees
     def decide(self):
         result = sorted(self.ready_tasks, key=lambda task: -task.duration)
         return result
 
-class FromCriticalPath(Algorithm):
-    def __init__(self, ready_tasks: List["Task"], processors: List["Processor"], all_tasks: List["Processor"]):
-        super().__init__(ready_tasks, processors)
 
-    def decide(self):
+class FromCriticalPath(Algorithm):
+    def __init__(
+        self,
+        ready_tasks: List["Task"],
+        processors: List["Processor"],
+        all_tasks: List["Processor"],
+        offline: bool = False,
+    ):
+        super().__init__(ready_tasks, processors, all_tasks, offline)
+
+    def decide(self, critical_order):
+        return sorted(self.ready_tasks, key=lambda x: critical_order.index(x))
+
+    def calculate(self):
         def update_critical_time(node: Task):
-            node.critical_time = (max([n.critical_time for n in node.out_tasks]) if len(node.blocking) > 0 else 0) + node.duration
+            node.critical_time = (
+                max([n.critical_time for n in node.blocking])
+                if len(node.blocking) > 0
+                else 0
+            ) + node.duration
             if len(node.blocked_by) == 0:
                 return
-            for n in node.in_task:
+            for n in [n for n in node.blocked_by if n.critical_time > 0]:
                 update_critical_time(n)
-        
+
         end_tasks = [task for task in self.all_tasks if len(task.blocking) == 0]
         for t in end_tasks:
             update_critical_time(t)
-        
+
         result = sorted(self.all_tasks, key=lambda task: -task.critical_time)
         return result

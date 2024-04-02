@@ -23,6 +23,7 @@ class Task:
         self.priority = priority
         # whether a task has stopped running
         self.done = False
+        self.critical_time = critical_time
 
         # In and Out degrees
         self.blocking = blocking
