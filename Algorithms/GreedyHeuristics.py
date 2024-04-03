@@ -19,6 +19,20 @@ class OutDegreesFirst(Algorithm):
         result = sorted(self.ready_tasks, key=lambda task: -len(task.blocking))
         return result
 
+class OutDegreesLast(Algorithm):
+    def __init__(
+        self,
+        ready_tasks: List["Task"],
+        processors: List["Processor"],
+        all_tasks: List["Task"],
+        offline: bool = False,
+    ):
+        super().__init__(ready_tasks, processors, all_tasks, offline)
+
+    # prioritize tasks with high amount of out-degrees
+    def decide(self):
+        result = sorted(self.ready_tasks, key=lambda task: len(task.blocking))
+        return result
 
 class MinRuntimeFirst(Algorithm):
     def __init__(

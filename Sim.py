@@ -1,12 +1,13 @@
 from Task import Task
 from Processor import Processor
 from Algorithms.Algorithm import Algorithm
-from Algorithms.Greedy import Greedy
+from Algorithms.Greedy import Greedy, MobileyeGreedy
 from Algorithms.GreedyHeuristics import (
     OutDegreesFirst,
     MinRuntimeFirst,
     MaxRuntimeFirst,
     FromCriticalPath,
+    OutDegreesLast,
 )
 from queue import PriorityQueue
 from TimeLineIlustration import TimeLineIlustartion
@@ -268,8 +269,7 @@ def run_sim_all(
 
 def main():
     output_file = "Results.txt"
-    print("FromCriticalPath:")
-    run_sim_all(FromCriticalPath, "Parser/Data/parsed", output_file, offline=True)
+    run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
 
     # print(
     #     run_sim_once(
