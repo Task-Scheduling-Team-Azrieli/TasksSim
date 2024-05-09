@@ -19,6 +19,7 @@ class OutDegreesFirst(Algorithm):
         result = sorted(self.ready_tasks, key=lambda task: -len(task.blocking))
         return result
 
+
 class OutDegreesLast(Algorithm):
     def __init__(
         self,
@@ -33,6 +34,7 @@ class OutDegreesLast(Algorithm):
     def decide(self):
         result = sorted(self.ready_tasks, key=lambda task: len(task.blocking))
         return result
+
 
 class MinRuntimeFirst(Algorithm):
     def __init__(
@@ -60,10 +62,23 @@ class MaxRuntimeFirst(Algorithm):
     ):
         super().__init__(ready_tasks, processors, all_tasks, offline)
 
-    # prioritize tasks with high amount of out-degrees
-    def decide(self):
-        result = sorted(self.ready_tasks, key=lambda task: -task.duration)
+    def get_threshold_index(self, sorted_list, threshold):
+        if threshold == -1:
+            threshold = sorted_list[len(sorted_list) // 2]
+        result = 0
+        while sorted_list[result].duration >= threshold:
+            result += 1
         return result
+
+    # prioritize tasks with high amount of out-degrees
+    def decide(self, threshold=-1):
+        result = sorted(self.ready_tasks, key=lambda task: -task.duration)
+        threshold_index = self.get_threshold_index(result, threshold)
+        return (
+            {0: result[:threshold_index], 1: result[threshold_index:]}
+            if self.is_priority
+            else {0: result}
+        )
 
 
 class FromCriticalPath(Algorithm):

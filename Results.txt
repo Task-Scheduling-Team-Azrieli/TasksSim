@@ -7,5 +7,5 @@ Average End Time For OutDegreesFirst: 100864882.02066858
 Average End Time For MaxRuntimeFirst: 104653505.64280176
 Average End Time For MinRuntimeFirst: 99199254.42253141
 
-
 Average End Time For FromCriticalPath: 97958823.13789117
+
