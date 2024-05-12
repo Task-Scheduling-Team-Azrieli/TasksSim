@@ -1,7 +1,7 @@
 from Task import Task
 from Processor import Processor
 from Algorithms.Algorithm import Algorithm
-from Algorithms.Greedy import Greedy
+from Algorithms.Greedy import Greedy, MobileyeGreedy
 from Algorithms.GreedyHeuristics import (
     OutDegreesFirst,
     MinRuntimeFirst,
@@ -15,11 +15,10 @@ from TimeLineIlustration import TimeLineIlustartion
 from typing import List, Tuple, Dict
 import json
 import os
-import random
 
 
 class Sim:
-    def __init__(self, is_mobileye=False, threshold=-1):
+    def __init__(self):
         self.tasks: List["Task"] = []
         self.processors: List["Processor"] = []
 
@@ -27,9 +26,6 @@ class Sim:
 
         self.total_time = 0
         self.final_end_time = 0
-
-        self.is_mobileye = is_mobileye
-        self.threshold = threshold
 
     def read_data(self, file_path: str):
         """reads data from a json file to objects (tasks, processors) in this class
@@ -86,16 +82,6 @@ class Sim:
 
         self.timeLineIlustartor = TimeLineIlustartion(self.processors)
 
-    def decide_priority(self, priority_rate):
-        p = random.random()
-        if not self.is_mobileye:
-            return 0
-
-        if p <= priority_rate:
-            return 0
-        else:
-            return 1
-
     def start(self, algorithm: Algorithm, illustration=False):
         """starts the simulation, matches tasks for processors
 
@@ -119,21 +105,11 @@ class Sim:
 
         def match_ready_tasks(current_time):
             algorithm.update_lists(idle_processors, ready_tasks, self.tasks)
-
             if algorithm.offline:
-                ready_tasks_orders = algorithm.decide(order, self.threshold)
+                ready_tasks_order = algorithm.decide(order)
             else:
-                ready_tasks_orders = algorithm.decide(
-                    threshold=self.threshold
-                )
-
-            ready_tasks_priority_index = self.decide_priority()
-            priority_indices = {0: 0, 1: 0}
-
-            task = ready_tasks_orders[ready_tasks_priority_index][
-                priority_indices[ready_tasks_priority_index]
-            ]
-            while True:
+                ready_tasks_order = algorithm.decide()
+            for task in ready_tasks_order:
                 for processor in self.processors:
                     if processor.type == task.processor_type and processor.idle:
                         # work on the task
@@ -150,10 +126,6 @@ class Sim:
 
                         # a task can only run on one processor
                         break
-                task = ready_tasks_orders[ready_tasks_priority_index][
-                    priority_indices[ready_tasks_priority_index]
-                ]
-                priority_indices[ready_tasks_priority_index] += 1
 
         # init - assign all the tasks you can
         match_ready_tasks(0)
@@ -242,14 +214,9 @@ class Sim:
 
 
 def run_sim_once(
-    algorithm: Algorithm,
-    file_path: str,
-    illustration=False,
-    offline=False,
-    threshold=-1,
-    is_mobileye=False,
+    algorithm: Algorithm, file_path: str, illustration=False, offline=False
 ):
-    sim = Sim(is_mobileye, threshold)
+    sim = Sim()
     sim.read_data(file_path)
 
     critical_path = sim.find_critical_path()
@@ -301,21 +268,17 @@ def run_sim_all(
 
 
 def main():
-    # TODO: fix run_sim_all
-    # output_file = "Results.txt"
-    # run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
+    output_file = "Results.txt"
+    run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
 
-    # TODO: do this decide shit for all heuristics
-    print(
-        run_sim_once(
-            MaxRuntimeFirst,
-            "Parser/Data/parsed/gsf.000390.prof.json",
-            illustration=True,
-            offline=False,
-            is_mobileye=True,
-            threshold=10000
-        )
-    )
+    # print(
+    #     run_sim_once(
+    #         FromCriticalPath,
+    #         "Parser/Data/parsed/gsf.000390.prof.json",
+    #         illustration=True,
+    #         offline=True,
+    #     )
+    # )
     # print(
     #     run_sim_once(
     #         Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
