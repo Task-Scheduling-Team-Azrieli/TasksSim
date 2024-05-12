@@ -15,6 +15,7 @@ from TimeLineIlustration import TimeLineIlustartion
 from typing import List, Tuple, Dict
 import json
 import os
+import random
 
 
 class Sim:
@@ -70,6 +71,7 @@ class Sim:
             # add in-degrees
             for task in temp[task_name].blocking:
                 task.blocked_by.append(temp[task_name])
+                task.len_blocked_by += 1
 
         # read processors
         for processor_str in processors_json:
@@ -103,13 +105,29 @@ class Sim:
         if algorithm.offline:
             order = algorithm.calculate()
 
-        def match_ready_tasks(current_time):
+        def match_ready_tasks(current_time, ready_tasks):
+            if len(ready_tasks) == 0:
+                return []
             algorithm.update_lists(idle_processors, ready_tasks, self.tasks)
             if algorithm.offline:
                 ready_tasks_order = algorithm.decide(order)
             else:
                 ready_tasks_order = algorithm.decide()
-            for task in ready_tasks_order:
+
+            threshold_index = 0
+            if algorithm.is_mobileye:
+                threshold_index = algorithm.order_by_priority(
+                    ready_tasks_order, algorithm.decide_attribute
+                )
+
+            unmatched_tasks = set()
+            task_index = (
+                threshold_index if random.random() >= algorithm.priority_rate else 0
+            )
+            task = ready_tasks[task_index]
+
+            while len(ready_tasks) > 0:
+                match_found = False
                 for processor in self.processors:
                     if processor.type == task.processor_type and processor.idle:
                         # work on the task
@@ -122,13 +140,29 @@ class Sim:
 
                         # update task lists
                         current_tasks.put((task.end_time, task))
-                        ready_tasks.remove(task)
 
                         # a task can only run on one processor
+                        match_found = True
                         break
 
+                if not match_found:
+                    unmatched_tasks.add(task)
+                ready_tasks.remove(task)
+
+                if len(ready_tasks) == 0:
+                    break
+
+                rand_value = random.random() if self.algorithm.is_mobileye else 0
+                task = ready_tasks[0]
+                if rand_value < algorithm.priority_rate and threshold_index > 0:
+                    threshold_index -= 1
+                else:
+                    task = ready_tasks[threshold_index]
+
+            return list(unmatched_tasks)
+
         # init - assign all the tasks you can
-        match_ready_tasks(0)
+        ready_tasks = match_ready_tasks(0, ready_tasks)
 
         # main loop
         while len(self.tasks) > 0:
@@ -153,7 +187,7 @@ class Sim:
 
             self.tasks.remove(done_task)
 
-            match_ready_tasks(current_time)
+            ready_tasks = match_ready_tasks(current_time, ready_tasks)
 
         return self.total_time, self.final_end_time
 
@@ -214,7 +248,13 @@ class Sim:
 
 
 def run_sim_once(
-    algorithm: Algorithm, file_path: str, illustration=False, offline=False
+    algorithm: Algorithm,
+    file_path: str,
+    illustration=False,
+    offline=False,
+    is_mobileye=False,
+    priority_threshold=-1,
+    priority_rate=-1,
 ):
     sim = Sim()
     sim.read_data(file_path)
@@ -223,7 +263,15 @@ def run_sim_once(
     critical_path = [task.name for task in critical_path]
 
     sim.start(
-        algorithm(sim.tasks, sim.processors, sim.tasks, offline),
+        algorithm(
+            sim.tasks,
+            sim.processors,
+            sim.tasks,
+            offline,
+            is_mobileye,
+            priority_threshold,
+            priority_rate,
+        ),
         illustration=illustration,
     )
 
@@ -268,8 +316,8 @@ def run_sim_all(
 
 
 def main():
-    output_file = "Results.txt"
-    run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
+    # output_file = "Results.txt"
+    # run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
 
     # print(
     #     run_sim_once(
@@ -281,7 +329,9 @@ def main():
     # )
     # print(
     #     run_sim_once(
-    #         Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
+    #         MinRuntimeFirst,
+    #         "Parser/Data/parsed/gsf.000390.prof.json",
+    #         illustration=False,
     #     )
     # )
     # print(
@@ -289,11 +339,16 @@ def main():
     #         OutDegreesFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
     #     )
     # )
-    # print(
-    #     run_sim_once(
-    #         MaxRuntimeFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
-    #     )
-    # )
+    print(
+        run_sim_once(
+            MaxRuntimeFirst,
+            "Parser/Data/parsed/gsf.000390.prof.json",
+            illustration=False,
+            is_mobileye=True,
+            priority_threshold=1000,
+            priority_rate=0.5,
+        )
+    )
 
     # run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file)
 
