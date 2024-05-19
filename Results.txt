@@ -1,3 +1,4 @@
+Without Priority:
 Average End Time For MobileyeGreedy: 111810820.45934632
 Average End Time For Greedy: 102098385.93998213
 
@@ -9,3 +10,5 @@ Average End Time For MinRuntimeFirst: 99199254.42253141
 
 
 Average End Time For FromCriticalPath: 97958823.13789117
+
+With Priority:

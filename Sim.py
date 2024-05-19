@@ -149,6 +149,8 @@ class Sim:
                     unmatched_tasks.add(task)
                 ready_tasks.remove(task)
 
+                # remove from
+
                 if len(ready_tasks) == 0:
                     break
 
@@ -157,6 +159,8 @@ class Sim:
                 if rand_value < algorithm.priority_rate and threshold_index > 0:
                     threshold_index -= 1
                 else:
+                    if len(ready_tasks) == threshold_index:
+                        threshold_index = 0
                     task = ready_tasks[threshold_index]
 
             return list(unmatched_tasks)
@@ -345,7 +349,7 @@ def main():
             "Parser/Data/parsed/gsf.000390.prof.json",
             illustration=False,
             is_mobileye=True,
-            priority_threshold=1000,
+            priority_threshold=23984732848326487,
             priority_rate=0.5,
         )
     )

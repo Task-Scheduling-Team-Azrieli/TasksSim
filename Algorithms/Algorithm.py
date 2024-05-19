@@ -38,13 +38,6 @@ class Algorithm:
     def order_by_priority(
         self, sorted_ready_tasks: List["Task"], attribute: str
     ) -> List["Task"]:
-        # check extremes
-        if self.priority_threshold < getattr(
-            sorted_ready_tasks[0], attribute
-        ) or self.priority_threshold > getattr(sorted_ready_tasks[-1], attribute):
-            random.shuffle(sorted_ready_tasks)
-            self.is_mobileye = False
-            return 0
 
         for task_index in range(1, len(sorted_ready_tasks), 1):
             task = sorted_ready_tasks[task_index]
@@ -61,6 +54,7 @@ class Algorithm:
 
         # if threshold is too big or too small, treat it like a random algorithm
         sorted_ready_tasks = random.shuffle(sorted_ready_tasks)
+        self.is_mobileye = False
         return 0
 
     # returns the order of tasks that the algorithm decided we should iterate over
