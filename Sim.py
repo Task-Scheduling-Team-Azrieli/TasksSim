@@ -17,6 +17,10 @@ import json
 import os
 import random
 
+# excel
+import openpyxl
+from openpyxl import Workbook
+
 
 class Sim:
     def __init__(self):
@@ -290,9 +294,11 @@ def run_sim_all(
     algorithm: Algorithm,
     folder_path: str,
     output_file: str,
-    print_average=True,
     illustration=False,
     offline=False,
+    is_mobileye=False,
+    priority_threshold=-1,
+    priority_rate=-1,
 ):
     total_end_time = 0
     count = 0
@@ -302,6 +308,9 @@ def run_sim_all(
             f"{folder_path}/{filename}",
             illustration=illustration,
             offline=offline,
+            is_mobileye=is_mobileye,
+            priority_threshold=priority_threshold,
+            priority_rate=priority_rate,
         )
         print(f"done with {filename}")
         total_end_time += sim.final_end_time
@@ -311,12 +320,34 @@ def run_sim_all(
 
     print(f"Average End Time For {algorithm.__qualname__}: {average_end_time}")
 
-    with open("Results.txt", "a") as file:
+    write_results(is_mobileye, priority_rate, priority_threshold)
+
+    with open(output_file, "a") as file:
         file.write(
             f"Average End Time For {algorithm.__qualname__}: {average_end_time}\n"
         )
 
     return average_end_time
+
+
+# writes the results to an excel spreadsheet
+def write_results(
+    output_file:str , algorithm: Algorithm, average_end_time: int, is_mobileye: bool, priority_rate: float, priority_threshold: float
+):
+    workbook: Workbook = openpyxl.load_workbook(output_file)
+
+    sheet = workbook[algorithm.__qualname__]
+    if sheet is None:
+        sheet = workbook.create_sheet(algorithm.__qualname__)
+
+    # rows = priority thresholds
+    # columns = priority rates
+    # cell = average end time for a certain threshold and rate
+    # if threshold and rate are -1 that means the algorithm is non-mobileye
+    sheet["A2"] = -1
+    sheet["B"]
+    # if (not is_mobileye):
+    pass
 
 
 def main():
