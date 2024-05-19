@@ -332,23 +332,27 @@ def run_sim_all(
 
 # writes the results to an excel spreadsheet
 def write_results(
-    output_file:str , algorithm: Algorithm, average_end_time: int, is_mobileye: bool, priority_rate: float, priority_threshold: float
+    output_file:str , algorithm: Algorithm, priority_ratios: list['float'], thresholds: list['float'], runtimes: list['list'] 
 ):
     workbook: Workbook = openpyxl.load_workbook(output_file)
 
     sheet = workbook[algorithm.__qualname__]
     if sheet is None:
         sheet = workbook.create_sheet(algorithm.__qualname__)
+        
+    sheet.cell(row=1, column=1).value = "isMobileye"
+    
+    for i, priority_rate in enumerate(priority_ratios):
+        sheet.cell(row=1, column=i+1).value = priority_ratios
 
-    # rows = priority thresholds
-    # columns = priority rates
-    # cell = average end time for a certain threshold and rate
-    # if threshold and rate are -1 that means the algorithm is non-mobileye
-    sheet["A2"] = -1
-    sheet["B"]
-    # if (not is_mobileye):
-    pass
-
+    for i, threshold in enumerate(thresholds):
+        sheet.cell(row=i+1, column=1).value = threshold
+        
+    for i, ratio_results in enumerate(runtimes):
+        for j, runtime in enumerate(ratio_results):
+            sheet.cell(row=i+2, column=j+2).value = runtime
+    
+    workbook.save(output_file)
 
 def main():
     # output_file = "Results.txt"
