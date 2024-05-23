@@ -6,7 +6,7 @@ import os
 import random
 import openpyxl
 from openpyxl import Workbook
-from Algorithms.GreedyHeuristics import MaxRuntimeFirst
+from Algorithms.GreedyHeuristics import MaxRuntimeFirst, MinRuntimeFirst, OutDegreesFirst, OutDegreesLast
 
 
 class FindThershold:
@@ -34,19 +34,17 @@ class FindThershold:
 
         return random.sample(files, num)
 
-    def test_thresholds(
-        self, algorithm: Algorithm, thresholds, num_of_files=5, num_of_rates=9
-    ):
+    def test_thresholds(self, algorithm: Algorithm, thresholds, num_of_files=5):
         # rows = priority thresholds
         # columns = priority rates
         # cells = average time for a certain priority rate and threshold
-        rates = numpy.linspace(0, 1, num=num_of_rates + 2)[1:-1]
+        rates = [0.5, 0.6, 0.7, 0.8, 0.9, 1]
         runtimes = numpy.zeros((len(thresholds), len(rates)))  # cells
         rand_files = self.get_random_files("Parser/Data/parsed", num_of_files)
 
         # sum all runs in the cells and calculate average at the end
+        print("finding thresholds...")
         for row, threshold in enumerate(thresholds):
-            print(f"row: {row}")
             for column, rate in enumerate(rates):
                 for file in rand_files:
                     sim = Sim()
@@ -104,19 +102,28 @@ class FindThershold:
         else:
             sheet = workbook.create_sheet(algorithm.__qualname__)
 
+        self.clear_sheet(sheet)
+
         sheet.cell(row=1, column=1).value = "isMobileye"
 
         for i, priority_rate in enumerate(priority_ratios):
-            sheet.cell(row=1, column=i + 1).value = priority_rate
+            sheet.cell(row=1, column=i + 2).value = priority_rate
 
         for i, threshold in enumerate(thresholds):
-            sheet.cell(row=i + 1, column=1).value = threshold
+            sheet.cell(row=i + 2, column=1).value = threshold
 
         for i, ratio_results in enumerate(runtimes):
             for j, runtime in enumerate(ratio_results):
                 sheet.cell(row=i + 2, column=j + 2).value = runtime
 
+        print("saved to excel.")
         workbook.save(output_file)
+
+    def clear_sheet(self, sheet):
+        for row in sheet.iter_rows():
+            for cell in row:
+                cell.value = None
+                cell.style = "Normal"
 
 
 def main():
@@ -124,9 +131,19 @@ def main():
     sim.read_data("Parser/Data/parsed/gsf.-00001.prof.json")
     print(f"len of tasks:  {len(sim.tasks)}")
     th = FindThershold(sorted(sim.tasks, key=lambda x: x.duration))
-    thresholds = th.find_thresholds(2, sim.tasks, "duration")
-    thresholds, rates, runtimes = th.test_thresholds(MaxRuntimeFirst, thresholds)
-    th.write_results("Results.xlsx", MaxRuntimeFirst, rates, thresholds, runtimes)
+    thresholds = th.find_thresholds(3, sim.tasks, "duration")
+    algorithms = [MinRuntimeFirst, MaxRuntimeFirst, OutDegreesFirst, OutDegreesLast]
+
+    for algorithm in algorithms:
+        thresholds, rates, runtimes = th.test_thresholds(
+            algorithm,
+            thresholds,
+            5,
+        )
+        # rates = [0.1,0.2,0.3,0.4]
+        # thresholds=[234,5698,123]
+        # runtimes = numpy.random.random((len(thresholds), len(rates)))
+        th.write_results("Results.xlsx", algorithm, rates, thresholds, runtimes)
 
 
 if __name__ == "__main__":
