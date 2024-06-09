@@ -19,6 +19,7 @@ class OutDegreesFirst(Algorithm):
         result = sorted(self.ready_tasks, key=lambda task: -len(task.blocking))
         return result
 
+
 class OutDegreesLast(Algorithm):
     def __init__(
         self,
@@ -33,6 +34,7 @@ class OutDegreesLast(Algorithm):
     def decide(self):
         result = sorted(self.ready_tasks, key=lambda task: len(task.blocking))
         return result
+
 
 class MinRuntimeFirst(Algorithm):
     def __init__(
@@ -63,6 +65,8 @@ class MaxRuntimeFirst(Algorithm):
     # prioritize tasks with high amount of out-degrees
     def decide(self):
         result = sorted(self.ready_tasks, key=lambda task: -task.duration)
+        if self.isMobileye:
+            result = shuffle(result[:thresh_index]) + shuffle(result[thresh_index:])
         return result
 
 

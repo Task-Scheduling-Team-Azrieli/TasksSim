@@ -238,7 +238,6 @@ def run_sim_all(
     algorithm: Algorithm,
     folder_path: str,
     output_file: str,
-    print_average=True,
     illustration=False,
     offline=False,
 ):
@@ -259,7 +258,7 @@ def run_sim_all(
 
     print(f"Average End Time For {algorithm.__qualname__}: {average_end_time}")
 
-    with open("Results.txt", "a") as file:
+    with open(output_file, "a") as file:
         file.write(
             f"Average End Time For {algorithm.__qualname__}: {average_end_time}\n"
         )
