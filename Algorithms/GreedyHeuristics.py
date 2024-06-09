@@ -2,6 +2,7 @@ from typing import List
 from Task import Task
 from Algorithms.Algorithm import Algorithm
 from Processor import Processor
+import random
 
 
 class OutDegreesFirst(Algorithm):
@@ -15,9 +16,26 @@ class OutDegreesFirst(Algorithm):
         super().__init__(ready_tasks, processors, all_tasks, offline)
 
     # prioritize tasks with high amount of out-degrees
-    def decide(self):
+    def decide(self, threshold):
         result = sorted(self.ready_tasks, key=lambda task: -len(task.blocking))
+        if self.is_mobileye:
+            threshold_index = 0
+            # find threshold index
+            for index, task in enumerate(result):
+                if len(task.blocking) <= threshold:
+                    threshold_index = index
+                    break
+
+            # shuffle list
+            result = random.shuffle(result[:threshold_index]) + random.shuffle(
+                result[threshold_index:]
+            )
         return result
+
+    def find_thresholds(self, recursion_depth: int) -> int:
+        return super().find_thresholds(
+            recursion_depth, self.all_tasks, lambda task: len(task.blocking)
+        )
 
 
 class OutDegreesLast(Algorithm):
@@ -31,9 +49,26 @@ class OutDegreesLast(Algorithm):
         super().__init__(ready_tasks, processors, all_tasks, offline)
 
     # prioritize tasks with high amount of out-degrees
-    def decide(self):
+    def decide(self, threshold):
         result = sorted(self.ready_tasks, key=lambda task: len(task.blocking))
+        if self.is_mobileye:
+            threshold_index = 0
+            # find threshold index
+            for index, task in enumerate(result):
+                if len(task.blocking) >= threshold:
+                    threshold_index = index
+                    break
+
+            # shuffle list
+            result = random.shuffle(result[:threshold_index]) + random.shuffle(
+                result[threshold_index:]
+            )
         return result
+
+    def find_thresholds(self, recursion_depth: int) -> int:
+        return super().find_thresholds(
+            recursion_depth, self.all_tasks, lambda task: len(task.blocking)
+        )
 
 
 class MinRuntimeFirst(Algorithm):
@@ -47,9 +82,26 @@ class MinRuntimeFirst(Algorithm):
         super().__init__(ready_tasks, processors, all_tasks, offline)
 
     # prioritize tasks with high amount of out-degrees
-    def decide(self):
+    def decide(self, threshold):
         result = sorted(self.ready_tasks, key=lambda task: task.duration)
+        if self.is_mobileye:
+            threshold_index = 0
+            # find threshold index
+            for index, task in enumerate(result):
+                if task.duration >= threshold:
+                    threshold_index = index
+                    break
+
+            # shuffle list
+            result = random.shuffle(result[:threshold_index]) + random.shuffle(
+                result[threshold_index:]
+            )
         return result
+
+    def find_thresholds(self, recursion_depth: int) -> int:
+        return super().find_thresholds(
+            recursion_depth, self.all_tasks, lambda task: task.duration
+        )
 
 
 class MaxRuntimeFirst(Algorithm):
@@ -59,15 +111,30 @@ class MaxRuntimeFirst(Algorithm):
         processors: List["Processor"],
         all_tasks: List["Task"],
         offline: bool = False,
+        is_mobileye: bool = False,
     ):
-        super().__init__(ready_tasks, processors, all_tasks, offline)
+        super().__init__(ready_tasks, processors, all_tasks, offline, is_mobileye)
 
     # prioritize tasks with high amount of out-degrees
-    def decide(self):
+    def decide(self, threshold: int):
         result = sorted(self.ready_tasks, key=lambda task: -task.duration)
-        if self.isMobileye:
-            result = shuffle(result[:thresh_index]) + shuffle(result[thresh_index:])
+        if self.is_mobileye:
+            threshold_index = 0
+            # find threshold index
+            for index, task in enumerate(result):
+                if task.duration <= threshold:
+                    threshold_index = index
+
+            # shuffle list
+            result = random.shuffle(result[:threshold_index]) + random.shuffle(
+                result[threshold_index:]
+            )
         return result
+
+    def find_thresholds(self, recursion_depth: int) -> int:
+        return super().find_thresholds(
+            recursion_depth, self.all_tasks, lambda task: task.duration
+        )
 
 
 class FromCriticalPath(Algorithm):

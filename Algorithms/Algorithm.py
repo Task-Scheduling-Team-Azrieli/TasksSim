@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING
+from typing import Callable, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from Task import Task
@@ -12,30 +12,42 @@ class Algorithm:
         processors: List["Processor"],
         all_tasks: List["Task"],
         offline: bool = False,
+        is_mobileye: bool = False,
     ):
         self.processors = processors
         self.ready_tasks = ready_tasks
         self.all_tasks = all_tasks
         self.offline = offline
+        self.is_mobileye = is_mobileye
 
     def update_lists(self, processors, ready_tasks, all_tasks):
         self.processors = processors
         self.ready_tasks = ready_tasks
         self.all_tasks = all_tasks
 
-    # threshold = the number to check against the task attribute
-    # below = whether priority 0 (more important) should be below the threshold or above
-    def decide_priority(
-        self, threshold: int, attribute: str, below: bool
-    ) -> List["Task"]:
-        for task in self.all_tasks:
-            task_attr_value = getattr(task, attribute)
-            if (below and task_attr_value < threshold) or (
-                not below and task_attr_value > threshold
-            ):
-                task.priority = 0
-            else:
-                task.priority = 1
+    # finds the threshold for a specific heuristic
+    def find_thresholds(
+        self,
+        recurtion_depth: int,
+        task_list: List[Task],
+        attribute_extractor: Callable[[Task], float],
+    ) -> List[float]:
+
+        n = len(task_list)
+        if recurtion_depth == 0 or n <= 1:
+            return []
+
+        # use the extractor to get the threshold value
+        thresh_value = attribute_extractor(task_list[n // 2])
+        return (
+            [thresh_value]
+            + self.find_thresholds(
+                recurtion_depth - 1, task_list[: n // 2], attribute_extractor
+            )
+            + self.find_thresholds(
+                recurtion_depth - 1, task_list[n // 2 :], attribute_extractor
+            )
+        )
 
     # returns the order of tasks that the algorithm decided we should iterate over
     def decide(self) -> List["Task"]:

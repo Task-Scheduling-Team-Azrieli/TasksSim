@@ -1,3 +1,4 @@
+from typing import Callable, List
 from Algorithms.Algorithm import Algorithm
 from Task import Task
 from Sim import Sim
@@ -6,7 +7,12 @@ import os
 import random
 import openpyxl
 from openpyxl import Workbook
-from Algorithms.GreedyHeuristics import MaxRuntimeFirst, MinRuntimeFirst, OutDegreesFirst, OutDegreesLast
+from Algorithms.GreedyHeuristics import (
+    MaxRuntimeFirst,
+    MinRuntimeFirst,
+    OutDegreesFirst,
+    OutDegreesLast,
+)
 
 
 class FindThershold:
@@ -14,16 +20,24 @@ class FindThershold:
         self.tasks: list["Task"] = tasks
 
     def find_thresholds(
-        self, recurtion_depth: int, task_list: list["Task"], attribute: str
-    ) -> list["float"]:
+        self,
+        recurtion_depth: int,
+        task_list: List[Task],
+        value_extractor: Callable[[Task], float],
+    ) -> List[float]:
         n = len(task_list)
         if recurtion_depth == 0 or n <= 1:
             return []
-        thresh_value = getattr(task_list[n // 2], attribute)
+        # Use the value_extractor to get the threshold value
+        thresh_value = value_extractor(task_list[n // 2])
         return (
             [thresh_value]
-            + self.find_thresholds(recurtion_depth - 1, task_list[: n // 2], attribute)
-            + self.find_thresholds(recurtion_depth - 1, task_list[n // 2 :], attribute)
+            + self.find_thresholds(
+                recurtion_depth - 1, task_list[: n // 2], value_extractor
+            )
+            + self.find_thresholds(
+                recurtion_depth - 1, task_list[n // 2 :], value_extractor
+            )
         )
 
     def get_random_files(self, directory, num):

@@ -82,7 +82,12 @@ class Sim:
 
         self.timeLineIlustartor = TimeLineIlustartion(self.processors)
 
-    def start(self, algorithm: Algorithm, illustration=False):
+    def start(
+        self,
+        algorithm: Algorithm,
+        illustration=False,
+        threshold: int = -1,
+    ):
         """starts the simulation, matches tasks for processors
 
         Args:
@@ -108,7 +113,7 @@ class Sim:
             if algorithm.offline:
                 ready_tasks_order = algorithm.decide(order)
             else:
-                ready_tasks_order = algorithm.decide()
+                ready_tasks_order = algorithm.decide(threshold)
             for task in ready_tasks_order:
                 for processor in self.processors:
                     if processor.type == task.processor_type and processor.idle:
@@ -268,6 +273,7 @@ def run_sim_all(
 
 def main():
     output_file = "Results.txt"
+    # TODO: continue here implement function that gets all thresholds, goes over them and runs start with each threshold
     run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
 
     # print(
