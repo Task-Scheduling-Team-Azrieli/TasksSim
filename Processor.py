@@ -27,7 +27,6 @@ class Processor:
         # and update ready_tasks
         for task in self.current_task.blocking:
             task.blocked_by.remove(self.current_task)
-            task.len_blocked_by -= 1
             if len(task.blocked_by) == 0:
                 ready_tasks.append(task)
 

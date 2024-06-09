@@ -11,26 +11,13 @@ class OutDegreesFirst(Algorithm):
         processors: List["Processor"],
         all_tasks: List["Task"],
         offline: bool = False,
-        is_mobileye: bool = False,
-        priority_threshold: float = -1,
-        priority_rate: float = -1,
     ):
-        super().__init__(
-            ready_tasks,
-            processors,
-            all_tasks,
-            "len_blocking",
-            offline,
-            is_mobileye,
-            priority_threshold,
-            priority_rate,
-        )
+        super().__init__(ready_tasks, processors, all_tasks, offline)
 
     # prioritize tasks with high amount of out-degrees
     def decide(self):
         result = sorted(self.ready_tasks, key=lambda task: -len(task.blocking))
         return result
-
 
 class OutDegreesLast(Algorithm):
     def __init__(
@@ -39,26 +26,13 @@ class OutDegreesLast(Algorithm):
         processors: List["Processor"],
         all_tasks: List["Task"],
         offline: bool = False,
-        is_mobileye: bool = False,
-        priority_threshold: float = -1,
-        priority_rate: float = -1,
     ):
-        super().__init__(
-            ready_tasks,
-            processors,
-            all_tasks,
-            "len_blocking",
-            offline,
-            is_mobileye,
-            priority_threshold,
-            priority_rate,
-        )
+        super().__init__(ready_tasks, processors, all_tasks, offline)
 
     # prioritize tasks with high amount of out-degrees
     def decide(self):
         result = sorted(self.ready_tasks, key=lambda task: len(task.blocking))
         return result
-
 
 class MinRuntimeFirst(Algorithm):
     def __init__(
@@ -67,20 +41,8 @@ class MinRuntimeFirst(Algorithm):
         processors: List["Processor"],
         all_tasks: List["Task"],
         offline: bool = False,
-        is_mobileye: bool = False,
-        priority_threshold: float = -1,
-        priority_rate: float = -1,
     ):
-        super().__init__(
-            ready_tasks,
-            processors,
-            all_tasks,
-            "duration",
-            offline,
-            is_mobileye,
-            priority_threshold,
-            priority_rate,
-        )
+        super().__init__(ready_tasks, processors, all_tasks, offline)
 
     # prioritize tasks with high amount of out-degrees
     def decide(self):
@@ -95,20 +57,8 @@ class MaxRuntimeFirst(Algorithm):
         processors: List["Processor"],
         all_tasks: List["Task"],
         offline: bool = False,
-        is_mobileye: bool = False,
-        priority_threshold: float = -1,
-        priority_rate: float = -1,
     ):
-        super().__init__(
-            ready_tasks,
-            processors,
-            all_tasks,
-            "duration",
-            offline,
-            is_mobileye,
-            priority_threshold,
-            priority_rate,
-        )
+        super().__init__(ready_tasks, processors, all_tasks, offline)
 
     # prioritize tasks with high amount of out-degrees
     def decide(self):
@@ -121,22 +71,10 @@ class FromCriticalPath(Algorithm):
         self,
         ready_tasks: List["Task"],
         processors: List["Processor"],
-        all_tasks: List["Task"],
+        all_tasks: List["Processor"],
         offline: bool = False,
-        is_mobileye: bool = False,
-        priority_threshold: float = -1,
-        priority_rate: float = -1,
     ):
-        super().__init__(
-            ready_tasks,
-            processors,
-            all_tasks,
-            "critical_time",
-            offline,
-            is_mobileye,
-            priority_threshold,
-            priority_rate,
-        )
+        super().__init__(ready_tasks, processors, all_tasks, offline)
 
     def decide(self, critical_order):
         return sorted(self.ready_tasks, key=lambda x: critical_order.index(x))
