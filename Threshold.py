@@ -15,28 +15,34 @@ from Algorithms.GreedyHeuristics import (
 )
 
 
-class FindThershold:
+class Threshold:
     def __init__(self, tasks: list["Task"]) -> None:
         self.tasks: list["Task"] = tasks
 
     def find_thresholds(
         self,
-        recurtion_depth: int,
+        recursion_depth: int,
+    ):
+        self._find_thresholds()
+
+    def _find_thresholds(
+        self,
+        recursion_depth: int,
         task_list: List[Task],
         value_extractor: Callable[[Task], float],
     ) -> List[float]:
         n = len(task_list)
-        if recurtion_depth == 0 or n <= 1:
+        if recursion_depth == 0 or n <= 1:
             return []
         # Use the value_extractor to get the threshold value
         thresh_value = value_extractor(task_list[n // 2])
         return (
             [thresh_value]
             + self.find_thresholds(
-                recurtion_depth - 1, task_list[: n // 2], value_extractor
+                recursion_depth - 1, task_list[: n // 2], value_extractor
             )
             + self.find_thresholds(
-                recurtion_depth - 1, task_list[n // 2 :], value_extractor
+                recursion_depth - 1, task_list[n // 2 :], value_extractor
             )
         )
 
@@ -144,7 +150,7 @@ def main():
     sim = Sim()
     sim.read_data("Parser/Data/parsed/gsf.-00001.prof.json")
     print(f"len of tasks:  {len(sim.tasks)}")
-    th = FindThershold(sorted(sim.tasks, key=lambda x: x.duration))
+    th = Threshold(sorted(sim.tasks, key=lambda x: x.duration))
     thresholds = th.find_thresholds(3, sim.tasks, "duration")
     algorithms = [MinRuntimeFirst, MaxRuntimeFirst, OutDegreesFirst, OutDegreesLast]
 

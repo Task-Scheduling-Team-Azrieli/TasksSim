@@ -1,3 +1,5 @@
+from openpyxl import Workbook
+import openpyxl
 from Task import Task
 from Processor import Processor
 from Algorithms.Algorithm import Algorithm
@@ -11,7 +13,6 @@ from Algorithms.GreedyHeuristics import (
 )
 from queue import PriorityQueue
 from TimeLineIlustration import TimeLineIlustartion
-
 from typing import List, Tuple, Dict
 import json
 import os
@@ -219,7 +220,11 @@ class Sim:
 
 
 def run_sim_once(
-    algorithm: Algorithm, file_path: str, illustration=False, offline=False
+    algorithm: Algorithm,
+    file_path: str,
+    illustration=False,
+    offline=False,
+    is_mobileye: bool = False,
 ):
     sim = Sim()
     sim.read_data(file_path)
@@ -227,10 +232,23 @@ def run_sim_once(
     critical_path = sim.find_critical_path()
     critical_path = [task.name for task in critical_path]
 
-    sim.start(
-        algorithm(sim.tasks, sim.processors, sim.tasks, offline),
-        illustration=illustration,
-    )
+    if is_mobileye:
+        algorithm_instance = algorithm(sim.tasks, sim.processors, sim.tasks, offline)
+        thresholds = algorithm_instance.find_thresholds(3)
+
+        for threshold in thresholds:
+            total_time, _ = sim.start(
+                algorithm_instance, illustration=False, threshold=threshold
+            )
+            # write to excel
+            write_results(file_path, algorithm_instance, threshold, total_time)
+
+    else:
+
+        sim.start(
+            algorithm(sim.tasks, sim.processors, sim.tasks, offline),
+            illustration=illustration,
+        )
 
     if illustration:
         sim.set_critical_path(critical_path)
@@ -239,24 +257,70 @@ def run_sim_once(
     return sim
 
 
+def write_results(
+    output_file: str,
+    algorithm: Algorithm,
+    threshold: float | int,
+    runtime: float,
+):
+    workbook: Workbook = openpyxl.load_workbook(output_file)
+
+    if algorithm.__qualname__ in workbook.sheetnames:
+        sheet = workbook[algorithm.__qualname__]
+    else:
+        sheet = workbook.create_sheet(algorithm.__qualname__)
+
+    clear_sheet(sheet)
+
+    sheet.cell(row=1, column=1).value = "isMobileye"
+
+    for i, priority_rate in enumerate(priority_ratios):
+        sheet.cell(row=1, column=i + 2).value = priority_rate
+
+    for i, threshold in enumerate(thresholds):
+        sheet.cell(row=i + 2, column=1).value = threshold
+
+    for i, ratio_results in enumerate(runtimes):
+        for j, runtime in enumerate(ratio_results):
+            sheet.cell(row=i + 2, column=j + 2).value = runtime
+
+    print("saved to excel.")
+    workbook.save(output_file)
+
+
+def clear_sheet(self, sheet):
+    for row in sheet.iter_rows():
+        for cell in row:
+            cell.value = None
+            cell.style = "Normal"
+
+
 def run_sim_all(
     algorithm: Algorithm,
     folder_path: str,
     output_file: str,
     illustration=False,
     offline=False,
+    is_mobileye: bool = False,
 ):
     total_end_time = 0
     count = 0
     for filename in os.listdir(folder_path):
-        sim = run_sim_once(
-            algorithm,
-            f"{folder_path}/{filename}",
-            illustration=illustration,
-            offline=offline,
-        )
-        print(f"done with {filename}")
-        total_end_time += sim.final_end_time
+        if is_mobileye:
+            run_sim_once(
+                algorithm, f"{folder_path}/{filename}", False, offline, is_mobileye
+            )
+            print(f"done with {filename}")
+        else:
+            sim = run_sim_once(
+                algorithm,
+                f"{folder_path}/{filename}",
+                illustration=illustration,
+                offline=offline,
+            )
+            print(f"done with {filename}")
+            total_end_time += sim.final_end_time
+
         count += 1
 
     average_end_time = total_end_time / count
@@ -272,9 +336,8 @@ def run_sim_all(
 
 
 def main():
-    output_file = "Results.txt"
-    # TODO: continue here implement function that gets all thresholds, goes over them and runs start with each threshold
-    run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
+    # output_file = "Results.txt"
+    # run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
 
     # print(
     #     run_sim_once(
@@ -289,11 +352,14 @@ def main():
     #         Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
     #     )
     # )
-    # print(
-    #     run_sim_once(
-    #         OutDegreesFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
-    #     )
-    # )
+    print(
+        run_sim_once(
+            OutDegreesFirst,
+            "Parser/Data/parsed/gsf.000390.prof.json",
+            illustration=False,
+            is_mobileye=True,
+        )
+    )
     # print(
     #     run_sim_once(
     #         MaxRuntimeFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False

@@ -32,8 +32,8 @@ class OutDegreesFirst(Algorithm):
             )
         return result
 
-    def find_thresholds(self, recursion_depth: int) -> int:
-        return super().find_thresholds(
+    def find_thresholds(self, recursion_depth: int) -> List[float]:
+        return super()._find_thresholds(
             recursion_depth, self.all_tasks, lambda task: len(task.blocking)
         )
 
@@ -66,7 +66,7 @@ class OutDegreesLast(Algorithm):
         return result
 
     def find_thresholds(self, recursion_depth: int) -> int:
-        return super().find_thresholds(
+        return super()._find_thresholds(
             recursion_depth, self.all_tasks, lambda task: len(task.blocking)
         )
 
@@ -99,7 +99,7 @@ class MinRuntimeFirst(Algorithm):
         return result
 
     def find_thresholds(self, recursion_depth: int) -> int:
-        return super().find_thresholds(
+        return super()._find_thresholds(
             recursion_depth, self.all_tasks, lambda task: task.duration
         )
 
@@ -132,7 +132,7 @@ class MaxRuntimeFirst(Algorithm):
         return result
 
     def find_thresholds(self, recursion_depth: int) -> int:
-        return super().find_thresholds(
+        return super()._find_thresholds(
             recursion_depth, self.all_tasks, lambda task: task.duration
         )
 
