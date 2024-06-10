@@ -14,6 +14,8 @@ from Algorithms.GreedyHeuristics import (
     OutDegreesLast,
 )
 
+FILE_TO_INDEX = {}
+
 
 class Threshold:
     def __init__(self, tasks: list["Task"]) -> None:
@@ -105,7 +107,12 @@ class Threshold:
                     res[ranges[i - 1]] += 1
                     break
         return res
-
+    
+    def init_dictionaries():
+        files = os.listdir('Parser/Data/parsed')
+        files_dict = {i+1: file for i, file in enumerate(files)}
+        FILE_TO_INDEX = files_dict
+    
     # writes the results to an excel spreadsheet
     def write_results(
         self,
