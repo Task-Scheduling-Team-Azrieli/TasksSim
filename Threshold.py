@@ -108,42 +108,57 @@ class Threshold:
                     break
         return res
     
-    def init_dictionaries():
+    def init_dictionary():
         files = os.listdir('Parser/Data/parsed')
-        files_dict = {i+1: file for i, file in enumerate(files)}
+        files_dict = {i+2: file for i, file in enumerate(files)}
         FILE_TO_INDEX = files_dict
-    
+        
+    def init_sheet(self,
+                   output_file: str,
+                   algorithm: Algorithm,
+                   thresholds: list['float']):
+        if FILE_TO_INDEX == {}:
+            self.init_dictionary()
+        workbook: Workbook = openpyxl.load_workbook(output_file)
+        sheet = None
+        if algorithm.__qualname__ in workbook.sheetnames:
+            sheet = workbook[algorithm.__qualname__]
+            self.clear_sheet(sheet)
+        else:
+            workbook.create_sheet(algorithm.__qualname__)
+            sheet = workbook[algorithm.__qualname__]
+        for i, threshold in enumerate(thresholds):
+            sheet.cell(1, i+2).value = threshold
+        for key in FILE_TO_INDEX.keys:
+            sheet.cell(key, 1).value = FILE_TO_INDEX[key]
+        
+        workbook.save(output_file)
+            
     # writes the results to an excel spreadsheet
     def write_results(
         self,
         output_file: str,
+        input_file: str,
         algorithm: Algorithm,
-        priority_ratios: list["float"],
-        thresholds: list["float"],
-        runtimes: list["list"],
+        threshold: float,
+        runtime: float,
     ):
         workbook: Workbook = openpyxl.load_workbook(output_file)
 
         if algorithm.__qualname__ in workbook.sheetnames:
             sheet = workbook[algorithm.__qualname__]
         else:
-            sheet = workbook.create_sheet(algorithm.__qualname__)
+            raise Exception("init the sheet before write result (use init_sheet())")
 
-        self.clear_sheet(sheet)
+        #self.clear_sheet(sheet)
+        def find_threshold_column(threshold):
+            i = 1
+            while i<11:
+                if str(sheet.cell(0, i).value) == str(threshold):
+                    return i 
+            return -1
 
-        sheet.cell(row=1, column=1).value = "isMobileye"
-
-        for i, priority_rate in enumerate(priority_ratios):
-            sheet.cell(row=1, column=i + 2).value = priority_rate
-
-        for i, threshold in enumerate(thresholds):
-            sheet.cell(row=i + 2, column=1).value = threshold
-
-        for i, ratio_results in enumerate(runtimes):
-            for j, runtime in enumerate(ratio_results):
-                sheet.cell(row=i + 2, column=j + 2).value = runtime
-
-        print("saved to excel.")
+        sheet.cell(row=FILE_TO_INDEX[input_file], column=find_threshold_column(threshold)).value = runtime
         workbook.save(output_file)
 
     def clear_sheet(self, sheet):
@@ -160,7 +175,7 @@ def main():
     th = Threshold(sorted(sim.tasks, key=lambda x: x.duration))
     thresholds = th.find_thresholds(3, sim.tasks, "duration")
     algorithms = [MinRuntimeFirst, MaxRuntimeFirst, OutDegreesFirst, OutDegreesLast]
-
+    greedy_runtime = 1 # TODO get the runtime of greedy algo
     for algorithm in algorithms:
         thresholds, rates, runtimes = th.test_thresholds(
             algorithm,
@@ -170,7 +185,15 @@ def main():
         # rates = [0.1,0.2,0.3,0.4]
         # thresholds=[234,5698,123]
         # runtimes = numpy.random.random((len(thresholds), len(rates)))
-        th.write_results("Results.xlsx", algorithm, rates, thresholds, runtimes)
+        th.init_sheet("Result.xlsx", algorithm=algorithm, thresholds=thresholds)
+        for threshold in thresholds:
+            for filename in os.listdir("Parser/Data/parsed"):
+                runtime, _ = 1 #TODO get the runtime value 
+                th.write_results("Results.xlsx",
+                                 input_file=filename,
+                                 algorithm=algorithm,
+                                 threshold=threshold,
+                                 runtime=runtime/greedy_runtime)
 
 
 if __name__ == "__main__":
