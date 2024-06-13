@@ -282,6 +282,7 @@ def write_results(
     threshold: float,
     runtime: float,
 ):
+    input_file = input_file.split('/')[-1]
     workbook: Workbook = openpyxl.load_workbook(output_file)
 
     if algorithm.__qualname__ in workbook.sheetnames:
@@ -293,7 +294,7 @@ def write_results(
     def find_threshold_column(threshold):
         i = 1
         while i < 11:
-            if str(sheet.cell(0, i).value) == str(threshold):
+            if str(sheet.cell(1, i).value) == str(threshold):
                 return i
         return -1
 
@@ -306,7 +307,7 @@ def write_results(
 def init_dictionary():
     global FILE_TO_INDEX
     files = os.listdir("Parser/Data/parsed")
-    files_dict = {i + 2: file for i, file in enumerate(files)}
+    files_dict = {file.split('/')[-1]: i+2 for i, file in enumerate(files)}
     FILE_TO_INDEX = files_dict
 
 
@@ -324,7 +325,7 @@ def init_sheet(output_file: str, algorithm: Algorithm, thresholds: list["float"]
     for i, threshold in enumerate(thresholds):
         sheet.cell(1, i + 2).value = threshold
     for key in FILE_TO_INDEX.keys():
-        sheet.cell(key, 1).value = FILE_TO_INDEX[key]
+        sheet.cell(FILE_TO_INDEX[key], 1).value = key
 
     workbook.save(output_file)
 
