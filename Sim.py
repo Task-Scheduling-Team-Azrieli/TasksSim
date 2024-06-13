@@ -242,8 +242,8 @@ def run_sim_once(
         thresholds = algorithm_instance.find_thresholds(3)
 
         init_sheet(output_file, algorithm=algorithm, thresholds=thresholds)
-
-        greedy_runtime = 1
+        sim2 = Sim()
+        greedy_runtime, _ = sim2.start(Greedy(sim.tasks, sim.processors, sim.tasks, offline))
 
         for threshold in thresholds:
             # run sim and get total time
@@ -257,6 +257,7 @@ def run_sim_once(
                 algorithm=algorithm,
                 threshold=threshold,
                 runtime=total_time,
+                greedy_time=greedy_runtime
             )
 
     else:
@@ -281,6 +282,7 @@ def write_results(
     algorithm: Algorithm,
     threshold: float,
     runtime: float,
+    greedy_time: float
 ):
     input_file = input_file.split('/')[-1]
     workbook: Workbook = openpyxl.load_workbook(output_file)
@@ -289,18 +291,23 @@ def write_results(
         sheet = workbook[algorithm.__qualname__]
     else:
         raise Exception("init the sheet before write result (use init_sheet())")
+    
+    def same_value(value1, value2):
+        return abs(value1-value2) < 0.001*value1
 
     # self.clear_sheet(sheet)
     def find_threshold_column(threshold):
-        i = 1
-        while i < 11:
-            if str(sheet.cell(1, i).value) == str(threshold):
+        i = 2
+        while i < 12:
+            print(sheet.cell(1, 2).value)
+            if same_value(sheet.cell(1, i).value, threshold):
                 return i
+            i+=1
         return -1
 
     sheet.cell(
         row=FILE_TO_INDEX[input_file], column=find_threshold_column(threshold)
-    ).value = runtime
+    ).value = runtime/greedy_time
     workbook.save(output_file)
 
 
@@ -378,7 +385,7 @@ def run_sim_all(
 
 
 def main():
-    # output_file = "Results.txt"
+    output_file = "Results.txt"
     # run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
 
     # print(
@@ -394,22 +401,26 @@ def main():
     #         Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
     #     )
     # )
-    print(
-        run_sim_once(
-            MinRuntimeFirst,
-            "Parser/Data/parsed/gsf.000390.prof.json",
-            illustration=False,
-            is_mobileye=True,
-            output_file="Results.xlsx",
-        )
-    )
+    # print(
+    #     run_sim_once(
+    #         MinRuntimeFirst,
+    #         "Parser/Data/parsed/gsf.000390.prof.json",
+    #         illustration=False,
+    #         is_mobileye=True,
+    #         output_file="Results.xlsx",
+    #     )
+    # )
     # print(
     #     run_sim_once(
     #         MaxRuntimeFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
     #     )
     # )
 
-    # run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file)
+    run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file)
+    run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file)
+    run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file)
+    run_sim_all(OutDegreesLast, "Parser/Data/parsed", output_file)
+    
 
     # print(
     #     run_sim_once(
