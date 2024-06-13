@@ -12,8 +12,9 @@ class OutDegreesFirst(Algorithm):
         processors: List["Processor"],
         all_tasks: List["Task"],
         offline: bool = False,
+        is_mobileye: bool = False,
     ):
-        super().__init__(ready_tasks, processors, all_tasks, offline)
+        super().__init__(ready_tasks, processors, all_tasks, offline, is_mobileye)
 
     # prioritize tasks with high amount of out-degrees
     def decide(self, threshold):
@@ -45,8 +46,9 @@ class OutDegreesLast(Algorithm):
         processors: List["Processor"],
         all_tasks: List["Task"],
         offline: bool = False,
+        is_mobileye: bool = False,
     ):
-        super().__init__(ready_tasks, processors, all_tasks, offline)
+        super().__init__(ready_tasks, processors, all_tasks, offline, is_mobileye)
 
     # prioritize tasks with high amount of out-degrees
     def decide(self, threshold):
@@ -78,8 +80,9 @@ class MinRuntimeFirst(Algorithm):
         processors: List["Processor"],
         all_tasks: List["Task"],
         offline: bool = False,
+        is_mobileye: bool = False,
     ):
-        super().__init__(ready_tasks, processors, all_tasks, offline)
+        super().__init__(ready_tasks, processors, all_tasks, offline, is_mobileye)
 
     # prioritize tasks with high amount of out-degrees
     def decide(self, threshold):
@@ -93,9 +96,11 @@ class MinRuntimeFirst(Algorithm):
                     break
 
             # shuffle list
-            result = random.shuffle(result[:threshold_index]) + random.shuffle(
-                result[threshold_index:]
-            )
+            result_left = result[:threshold_index]
+            result_right = result[threshold_index:]
+            random.shuffle(result_left)
+            random.shuffle(result_right)
+            result = result_left + result_right
         return result
 
     def find_thresholds(self, recursion_depth: int) -> int:

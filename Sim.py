@@ -31,15 +31,6 @@ class Sim:
         self.total_time = 0
         self.final_end_time = 0
 
-    def copy(self):
-        other = Sim()
-        other.tasks = self.tasks.copy()
-        other.processors = self.processors.copy()
-        other.algorithm = self.algorithm
-        other.total_time = self.total_time
-        other.final_end_time = self.final_end_time
-        return other
-    
     def read_data(self, file_path: str):
         """reads data from a json file to objects (tasks, processors) in this class
 
@@ -246,14 +237,20 @@ def run_sim_once(
     critical_path = [task.name for task in critical_path]
 
     if is_mobileye:
-        algorithm_instance = algorithm(sim.tasks, sim.processors, sim.tasks, offline)
+        algorithm_instance = algorithm(
+            sim.tasks, sim.processors, sim.tasks, offline, is_mobileye
+        )
 
         thresholds = algorithm_instance.find_thresholds(3)
 
         init_sheet(output_file, algorithm=algorithm, thresholds=thresholds)
-        sim2 = sim.copy()
-        sim2.algorithm = Greedy(sim.tasks, sim.processors, sim.tasks, offline)
-        greedy_runtime, _ = sim2.start(Greedy(sim.tasks, sim.processors, sim.tasks, offline))
+
+        # get Greedy runtime for this file
+        sim2 = Sim()
+        sim2.read_data(file_path)
+        greedy_runtime, _ = sim2.start(
+            Greedy(sim.tasks, sim.processors, sim.tasks, offline)
+        )
 
         for threshold in thresholds:
             # run sim and get total time
@@ -267,13 +264,13 @@ def run_sim_once(
                 algorithm=algorithm,
                 threshold=threshold,
                 runtime=total_time,
-                greedy_time=greedy_runtime
+                greedy_time=greedy_runtime,
             )
 
     else:
 
         sim.start(
-            algorithm(sim.tasks, sim.processors, sim.tasks, offline),
+            algorithm(sim.tasks, sim.processors, sim.tasks, offline, is_mobileye),
             illustration=illustration,
         )
 
@@ -292,39 +289,38 @@ def write_results(
     algorithm: Algorithm,
     threshold: float,
     runtime: float,
-    greedy_time: float
+    greedy_time: float,
 ):
-    input_file = input_file.split('/')[-1]
+    input_file = input_file.split("/")[-1]
     workbook: Workbook = openpyxl.load_workbook(output_file)
 
     if algorithm.__qualname__ in workbook.sheetnames:
         sheet = workbook[algorithm.__qualname__]
     else:
         raise Exception("init the sheet before write result (use init_sheet())")
-    
+
     def same_value(value1, value2):
-        return abs(value1-value2) < 0.001*value1
+        return abs(value1 - value2) < 0.001 * value1
 
     # self.clear_sheet(sheet)
     def find_threshold_column(threshold):
         i = 2
         while i < 12:
-            print(sheet.cell(1, 2).value)
             if same_value(sheet.cell(1, i).value, threshold):
                 return i
-            i+=1
+            i += 1
         return -1
 
     sheet.cell(
         row=FILE_TO_INDEX[input_file], column=find_threshold_column(threshold)
-    ).value = runtime/greedy_time
+    ).value = (runtime / greedy_time)
     workbook.save(output_file)
 
 
 def init_dictionary():
     global FILE_TO_INDEX
     files = os.listdir("Parser/Data/parsed")
-    files_dict = {file.split('/')[-1]: i+2 for i, file in enumerate(files)}
+    files_dict = {file.split("/")[-1]: i + 2 for i, file in enumerate(files)}
     FILE_TO_INDEX = files_dict
 
 
@@ -411,26 +407,34 @@ def main():
     #         Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
     #     )
     # )
-    # print(
-    #     run_sim_once(
-    #         MinRuntimeFirst,
-    #         "Parser/Data/parsed/gsf.000390.prof.json",
-    #         illustration=False,
-    #         is_mobileye=True,
-    #         output_file="Results.xlsx",
-    #     )
-    # )
+    print(
+        run_sim_once(
+            MinRuntimeFirst,
+            "Parser/Data/parsed/gsf.000390.prof.json",
+            illustration=False,
+            is_mobileye=True,
+            output_file="Results.xlsx",
+        )
+    )
+    print(
+        run_sim_once(
+            MinRuntimeFirst,
+            "Parser/Data/parsed/gsf.000391.prof.json",
+            illustration=False,
+            is_mobileye=True,
+            output_file="Results.xlsx",
+        )
+    )
     # print(
     #     run_sim_once(
     #         MaxRuntimeFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
     #     )
     # )
 
-    run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
-    run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
-    run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
-    run_sim_all(OutDegreesLast, "Parser/Data/parsed", output_file, is_mobileye=True)
-    
+    # run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
+    # run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
+    # run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
+    # run_sim_all(OutDegreesLast, "Parser/Data/parsed", output_file, is_mobileye=True)
 
     # print(
     #     run_sim_once(
