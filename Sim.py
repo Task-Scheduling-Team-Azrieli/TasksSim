@@ -17,6 +17,9 @@ from typing import List, Tuple, Dict
 import json
 import os
 
+# for writing the results to excel
+FILE_TO_INDEX = {}
+
 
 class Sim:
     def __init__(self):
@@ -225,6 +228,7 @@ def run_sim_once(
     illustration=False,
     offline=False,
     is_mobileye: bool = False,
+    output_file: str = "",
 ):
     sim = Sim()
     sim.read_data(file_path)
@@ -234,14 +238,26 @@ def run_sim_once(
 
     if is_mobileye:
         algorithm_instance = algorithm(sim.tasks, sim.processors, sim.tasks, offline)
+
         thresholds = algorithm_instance.find_thresholds(3)
 
+        init_sheet(output_file, algorithm=algorithm, thresholds=thresholds)
+
+        greedy_runtime = 1
+
         for threshold in thresholds:
+            # run sim and get total time
             total_time, _ = sim.start(
                 algorithm_instance, illustration=False, threshold=threshold
             )
             # write to excel
-            write_results(file_path, algorithm_instance, threshold, total_time)
+            write_results(
+                output_file,
+                input_file=file_path,
+                algorithm=algorithm,
+                threshold=threshold,
+                runtime=total_time,
+            )
 
     else:
 
@@ -256,11 +272,14 @@ def run_sim_once(
 
     return sim
 
+    # writes the results to an excel spreadsheet
+
 
 def write_results(
     output_file: str,
+    input_file: str,
     algorithm: Algorithm,
-    threshold: float | int,
+    threshold: float,
     runtime: float,
 ):
     workbook: Workbook = openpyxl.load_workbook(output_file)
@@ -268,27 +287,49 @@ def write_results(
     if algorithm.__qualname__ in workbook.sheetnames:
         sheet = workbook[algorithm.__qualname__]
     else:
-        sheet = workbook.create_sheet(algorithm.__qualname__)
+        raise Exception("init the sheet before write result (use init_sheet())")
 
-    clear_sheet(sheet)
+    # self.clear_sheet(sheet)
+    def find_threshold_column(threshold):
+        i = 1
+        while i < 11:
+            if str(sheet.cell(0, i).value) == str(threshold):
+                return i
+        return -1
 
-    sheet.cell(row=1, column=1).value = "isMobileye"
-
-    for i, priority_rate in enumerate(priority_ratios):
-        sheet.cell(row=1, column=i + 2).value = priority_rate
-
-    for i, threshold in enumerate(thresholds):
-        sheet.cell(row=i + 2, column=1).value = threshold
-
-    for i, ratio_results in enumerate(runtimes):
-        for j, runtime in enumerate(ratio_results):
-            sheet.cell(row=i + 2, column=j + 2).value = runtime
-
-    print("saved to excel.")
+    sheet.cell(
+        row=FILE_TO_INDEX[input_file], column=find_threshold_column(threshold)
+    ).value = runtime
     workbook.save(output_file)
 
 
-def clear_sheet(self, sheet):
+def init_dictionary():
+    global FILE_TO_INDEX
+    files = os.listdir("Parser/Data/parsed")
+    files_dict = {i + 2: file for i, file in enumerate(files)}
+    FILE_TO_INDEX = files_dict
+
+
+def init_sheet(output_file: str, algorithm: Algorithm, thresholds: list["float"]):
+    if FILE_TO_INDEX == {}:
+        init_dictionary()
+    workbook: Workbook = openpyxl.load_workbook(output_file)
+    sheet = None
+    if algorithm.__qualname__ in workbook.sheetnames:
+        sheet = workbook[algorithm.__qualname__]
+        clear_sheet(sheet)
+    else:
+        workbook.create_sheet(algorithm.__qualname__)
+        sheet = workbook[algorithm.__qualname__]
+    for i, threshold in enumerate(thresholds):
+        sheet.cell(1, i + 2).value = threshold
+    for key in FILE_TO_INDEX.keys():
+        sheet.cell(key, 1).value = FILE_TO_INDEX[key]
+
+    workbook.save(output_file)
+
+
+def clear_sheet(sheet):
     for row in sheet.iter_rows():
         for cell in row:
             cell.value = None
@@ -354,10 +395,11 @@ def main():
     # )
     print(
         run_sim_once(
-            OutDegreesFirst,
+            MinRuntimeFirst,
             "Parser/Data/parsed/gsf.000390.prof.json",
             illustration=False,
             is_mobileye=True,
+            output_file="Results.xlsx",
         )
     )
     # print(
