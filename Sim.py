@@ -31,6 +31,15 @@ class Sim:
         self.total_time = 0
         self.final_end_time = 0
 
+    def copy(self):
+        other = Sim()
+        other.tasks = self.tasks.copy()
+        other.processors = self.processors.copy()
+        other.algorithm = self.algorithm
+        other.total_time = self.total_time
+        other.final_end_time = self.final_end_time
+        return other
+    
     def read_data(self, file_path: str):
         """reads data from a json file to objects (tasks, processors) in this class
 
@@ -228,7 +237,7 @@ def run_sim_once(
     illustration=False,
     offline=False,
     is_mobileye: bool = False,
-    output_file: str = "",
+    output_file: str = "Results.xlsx",
 ):
     sim = Sim()
     sim.read_data(file_path)
@@ -242,7 +251,8 @@ def run_sim_once(
         thresholds = algorithm_instance.find_thresholds(3)
 
         init_sheet(output_file, algorithm=algorithm, thresholds=thresholds)
-        sim2 = Sim()
+        sim2 = sim.copy()
+        sim2.algorithm = Greedy(sim.tasks, sim.processors, sim.tasks, offline)
         greedy_runtime, _ = sim2.start(Greedy(sim.tasks, sim.processors, sim.tasks, offline))
 
         for threshold in thresholds:
@@ -385,7 +395,7 @@ def run_sim_all(
 
 
 def main():
-    output_file = "Results.txt"
+    output_file = "Results.xlsx"
     # run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
 
     # print(
@@ -416,10 +426,10 @@ def main():
     #     )
     # )
 
-    run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file)
-    run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file)
-    run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file)
-    run_sim_all(OutDegreesLast, "Parser/Data/parsed", output_file)
+    run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
+    run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
+    run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
+    run_sim_all(OutDegreesLast, "Parser/Data/parsed", output_file, is_mobileye=True)
     
 
     # print(

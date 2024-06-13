@@ -16,9 +16,11 @@ class Greedy(Algorithm):
 
     # simply returns the order that was given, since the greedy doesn't care
     # gives priority 0 tasks a precedence
-    def decide(self):
+    def decide(self, thresholds):
         return self.ready_tasks.copy()
     
+    def find_thresholds(self, recursion_depth: int) -> List[float]:
+        return []
 class MobileyeGreedy(Algorithm):
     def __init__(
         self,
