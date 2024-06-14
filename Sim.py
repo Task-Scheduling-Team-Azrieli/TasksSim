@@ -319,7 +319,7 @@ def write_results(
         row=FILE_TO_INDEX[input_file], column=find_threshold_column(threshold)
     ).value = (runtime / greedy_time)
     workbook.save(output_file)
-
+    workbook.close()
 
 def init_dictionary():
     global FILE_TO_INDEX
@@ -481,9 +481,9 @@ def main():
         is_mobileye=True,
         thresholds=thresholds,
     )
-    # run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
-    # run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
-    # run_sim_all(OutDegreesLast, "Parser/Data/parsed", output_file, is_mobileye=True)
+    run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, is_mobileye=True, thresholds=thresholds)
+    run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file, is_mobileye=True, thresholds=thresholds)
+    run_sim_all(OutDegreesLast, "Parser/Data/parsed", output_file, is_mobileye=True, thresholds=thresholds)
 
     # print(
     #     run_sim_once(
