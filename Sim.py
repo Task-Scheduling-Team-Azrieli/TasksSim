@@ -118,7 +118,10 @@ class Sim:
             if algorithm.offline:
                 ready_tasks_order = algorithm.decide(order)
             else:
-                ready_tasks_order = algorithm.decide(threshold)
+                if not threshold == -1:
+                    ready_tasks_order = algorithm.decide(threshold)
+                else:
+                    ready_tasks_order = algorithm.decide()
             for task in ready_tasks_order:
                 for processor in self.processors:
                     if processor.type == task.processor_type and processor.idle:
@@ -226,10 +229,10 @@ class Sim:
 def run_sim_once(
     algorithm: Algorithm,
     file_path: str,
-    thresholds: list['float'],
     illustration=False,
     offline=False,
     is_mobileye: bool = False,
+    thresholds: list["float"] = [],
     output_file: str = "Results.xlsx",
 ):
     sim = Sim()
@@ -239,22 +242,20 @@ def run_sim_once(
     critical_path = [task.name for task in critical_path]
 
     if is_mobileye:
-        algorithm_instance = algorithm(
-            sim.tasks, sim.processors, sim.tasks, offline, is_mobileye
-        )
 
-        
         # get Greedy runtime for this file
         sim2 = Sim()
         sim2.read_data(file_path)
         greedy_runtime, _ = sim2.start(
-            Greedy(sim.tasks, sim.processors, sim.tasks, offline)
+            Greedy(sim2.tasks, sim2.processors, sim2.tasks, offline)
         )
 
         for threshold in thresholds:
             # run sim and get total time
             total_time, _ = sim.start(
-                algorithm_instance, illustration=False, threshold=threshold
+                algorithm(sim.tasks, sim.processors, sim.tasks, offline, is_mobileye),
+                illustration=False,
+                threshold=threshold,
             )
             # write to excel
             write_results(
@@ -265,6 +266,10 @@ def run_sim_once(
                 runtime=total_time,
                 greedy_time=greedy_runtime,
             )
+
+            # init sim for the new threshold
+            sim = Sim()
+            sim.read_data(file_path)
 
     else:
 
@@ -354,13 +359,19 @@ def run_sim_all(
     illustration=False,
     offline=False,
     is_mobileye: bool = False,
+    thresholds: list["float"] = [],
 ):
     total_end_time = 0
     count = 0
     for filename in os.listdir(folder_path):
         if is_mobileye:
             run_sim_once(
-                algorithm, f"{folder_path}/{filename}", False, offline, is_mobileye
+                algorithm,
+                f"{folder_path}/{filename}",
+                False,
+                offline,
+                is_mobileye,
+                thresholds[algorithm.__qualname__],
             )
             print(f"done with {filename}")
         else:
@@ -386,21 +397,39 @@ def run_sim_all(
 
     return average_end_time
 
-def init_sheets_and_thresholds(output_file):
+
+def init_sheets_and_thresholds(output_file, num_rand_files=5):
     sim = Sim()
-    random_files = random.sample(["Parser/Data/parsed/"+file_name for file_name in os.listdir("Parser/Data/parsed")], 5)
+    random_files = random.sample(
+        [
+            "Parser/Data/parsed/" + file_name
+            for file_name in os.listdir("Parser/Data/parsed")
+        ],
+        num_rand_files,
+    )
     for random_file in random_files:
         sim.read_data(random_file)
     init_dictionary()
-    algoritms: list[Algorithm] = [MinRuntimeFirst(sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True),
-                 MaxRuntimeFirst(sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True),
-                 OutDegreesFirst(sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True),
-                 OutDegreesLast(sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True)]
+    algoritms: list[Algorithm] = [
+        MinRuntimeFirst(
+            sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True
+        ),
+        MaxRuntimeFirst(
+            sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True
+        ),
+        OutDegreesFirst(
+            sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True
+        ),
+        OutDegreesLast(
+            sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True
+        ),
+    ]
     thresholds = {}
     for algo in algoritms:
         thresholds[algo.__class__.__name__] = algo.find_thresholds(3)
         init_sheet(output_file, algo, thresholds[algo.__class__.__name__])
     return thresholds
+
 
 def main():
     output_file = "Results.xlsx"
@@ -420,33 +449,38 @@ def main():
     #         Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
     #     )
     # )
-    print(
-        run_sim_once(
-            MinRuntimeFirst,
-            "Parser/Data/parsed/gsf.000001.prof.json",
-            illustration=False,
-            is_mobileye=True,
-            thresholds=thresholds['MinRuntimeFirst'],
-            output_file="Results.xlsx",
-        )
-    )
-    print(
-        run_sim_once(
-            MinRuntimeFirst,
-            "Parser/Data/parsed/gsf.000000.prof.json",
-            illustration=False,
-            thresholds=thresholds['MinRuntimeFirst'],
-            is_mobileye=True,
-            output_file="Results.xlsx",
-        )
-    )
+
+    # run_sim_once(
+    #     MinRuntimeFirst,
+    #     "Parser/Data/parsed/gsf.000001.prof.json",
+    #     illustration=False,
+    #     is_mobileye=True,
+    #     thresholds=thresholds["MinRuntimeFirst"],
+    #     output_file="Results.xlsx",
+    # )
+
+    # run_sim_once(
+    #     MinRuntimeFirst,
+    #     "Parser/Data/parsed/gsf.000000.prof.json",
+    #     illustration=False,
+    #     thresholds=thresholds["MinRuntimeFirst"],
+    #     is_mobileye=True,
+    #     output_file="Results.xlsx",
+    # )
+
     # print(
     #     run_sim_once(
     #         MaxRuntimeFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
     #     )
     # )
 
-    # run_sim_all(MinRuntimeFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
+    run_sim_all(
+        MinRuntimeFirst,
+        "Parser/Data/parsed",
+        output_file,
+        is_mobileye=True,
+        thresholds=thresholds,
+    )
     # run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
     # run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file, is_mobileye=True)
     # run_sim_all(OutDegreesLast, "Parser/Data/parsed", output_file, is_mobileye=True)
