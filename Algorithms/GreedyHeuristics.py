@@ -28,9 +28,11 @@ class OutDegreesFirst(Algorithm):
                     break
 
             # shuffle list
-            result = random.shuffle(result[:threshold_index]) + random.shuffle(
-                result[threshold_index:]
-            )
+            result_left = result[:threshold_index]
+            result_right = result[threshold_index:]
+            random.shuffle(result_left)
+            random.shuffle(result_right)
+            result = result_left + result_right
         return result
 
     def find_thresholds(self, recursion_depth: int) -> List[float]:
@@ -62,9 +64,11 @@ class OutDegreesLast(Algorithm):
                     break
 
             # shuffle list
-            result = random.shuffle(result[:threshold_index]) + random.shuffle(
-                result[threshold_index:]
-            )
+            result_left = result[:threshold_index]
+            result_right = result[threshold_index:]
+            random.shuffle(result_left)
+            random.shuffle(result_right)
+            result = result_left + result_right
         return result
 
     def find_thresholds(self, recursion_depth: int) -> int:
@@ -129,11 +133,14 @@ class MaxRuntimeFirst(Algorithm):
             for index, task in enumerate(result):
                 if task.duration <= threshold:
                     threshold_index = index
+                    break
 
             # shuffle list
-            result = random.shuffle(result[:threshold_index]) + random.shuffle(
-                result[threshold_index:]
-            )
+            result_left = result[:threshold_index]
+            result_right = result[threshold_index:]
+            random.shuffle(result_left)
+            random.shuffle(result_right)
+            result = result_left + result_right
         return result
 
     def find_thresholds(self, recursion_depth: int) -> int:
