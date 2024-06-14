@@ -1,5 +1,6 @@
 from openpyxl import Workbook
 import openpyxl
+import random
 from Task import Task
 from Processor import Processor
 from Algorithms.Algorithm import Algorithm
@@ -225,6 +226,7 @@ class Sim:
 def run_sim_once(
     algorithm: Algorithm,
     file_path: str,
+    thresholds: list['float'],
     illustration=False,
     offline=False,
     is_mobileye: bool = False,
@@ -241,10 +243,7 @@ def run_sim_once(
             sim.tasks, sim.processors, sim.tasks, offline, is_mobileye
         )
 
-        thresholds = algorithm_instance.find_thresholds(3)
-
-        init_sheet(output_file, algorithm=algorithm, thresholds=thresholds)
-
+        
         # get Greedy runtime for this file
         sim2 = Sim()
         sim2.read_data(file_path)
@@ -325,16 +324,14 @@ def init_dictionary():
 
 
 def init_sheet(output_file: str, algorithm: Algorithm, thresholds: list["float"]):
-    if FILE_TO_INDEX == {}:
-        init_dictionary()
     workbook: Workbook = openpyxl.load_workbook(output_file)
     sheet = None
-    if algorithm.__qualname__ in workbook.sheetnames:
-        sheet = workbook[algorithm.__qualname__]
+    if algorithm.__class__.__name__ in workbook.sheetnames:
+        sheet = workbook[algorithm.__class__.__name__]
         clear_sheet(sheet)
     else:
-        workbook.create_sheet(algorithm.__qualname__)
-        sheet = workbook[algorithm.__qualname__]
+        workbook.create_sheet(algorithm.__class__.__name__)
+        sheet = workbook[algorithm.__class__.__name__]
     for i, threshold in enumerate(thresholds):
         sheet.cell(1, i + 2).value = threshold
     for key in FILE_TO_INDEX.keys():
@@ -389,9 +386,25 @@ def run_sim_all(
 
     return average_end_time
 
+def init_sheets_and_thresholds(output_file):
+    sim = Sim()
+    random_files = random.sample(["Parser/Data/parsed/"+file_name for file_name in os.listdir("Parser/Data/parsed")], 5)
+    for random_file in random_files:
+        sim.read_data(random_file)
+    init_dictionary()
+    algoritms: list[Algorithm] = [MinRuntimeFirst(sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True),
+                 MaxRuntimeFirst(sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True),
+                 OutDegreesFirst(sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True),
+                 OutDegreesLast(sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True)]
+    thresholds = {}
+    for algo in algoritms:
+        thresholds[algo.__class__.__name__] = algo.find_thresholds(3)
+        init_sheet(output_file, algo, thresholds[algo.__class__.__name__])
+    return thresholds
 
 def main():
     output_file = "Results.xlsx"
+    thresholds = init_sheets_and_thresholds(output_file)
     # run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
 
     # print(
@@ -410,17 +423,19 @@ def main():
     print(
         run_sim_once(
             MinRuntimeFirst,
-            "Parser/Data/parsed/gsf.000390.prof.json",
+            "Parser/Data/parsed/gsf.000001.prof.json",
             illustration=False,
             is_mobileye=True,
+            thresholds=thresholds['MinRuntimeFirst'],
             output_file="Results.xlsx",
         )
     )
     print(
         run_sim_once(
             MinRuntimeFirst,
-            "Parser/Data/parsed/gsf.000391.prof.json",
+            "Parser/Data/parsed/gsf.000000.prof.json",
             illustration=False,
+            thresholds=thresholds['MinRuntimeFirst'],
             is_mobileye=True,
             output_file="Results.xlsx",
         )
