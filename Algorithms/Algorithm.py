@@ -1,5 +1,6 @@
 from abc import abstractmethod
 import abc
+from GreedyHeuristics import FromCriticalPath
 from typing import Callable, List, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -15,12 +16,16 @@ class Algorithm(metaclass=abc.ABCMeta):
         all_tasks: List["Task"],
         offline: bool = False,
         is_mobileye: bool = False,
+        is_critical: bool = False,
+        threshold: int = -1
     ):
         self.processors = processors
         self.ready_tasks = ready_tasks
         self.all_tasks = all_tasks
         self.offline = offline
         self.is_mobileye = is_mobileye
+        self.threshold = threshold
+        self.is_critical = is_critical
 
     def update_lists(self, processors, ready_tasks, all_tasks):
         self.processors = processors
@@ -51,8 +56,20 @@ class Algorithm(metaclass=abc.ABCMeta):
             )
         )
 
+    def _color_tasks(self, priority_decider: Callable[["Task"], "float"]) -> List[float]:
+        for task in self.all_tasks:
+            task.priority = priority_decider(task)
+        if self.is_critical:
+            critical_path_instance = FromCriticalPath(self.ready_tasks, self.processors, self.all_tasks, offline=True)
+            critical_path = critical_path_instance.
+            
+    
     @abstractmethod
     def find_thresholds(self, recursion_depth: int) -> List[float]:
+        pass
+
+    @abstractmethod
+    def color_tasks(self, recursion_depth: int) -> List[float]:
         pass
 
     # returns the order of tasks that the algorithm decided we should iterate over

@@ -1,10 +1,19 @@
 from typing import List, TYPE_CHECKING
 
+TASK_PRIORITY_CRITICAL = 0
+TASK_PRIORITY_HIGH = 1
+TASK_PRIORITY_LOW = 2
+
 if TYPE_CHECKING:
     from Processor import Processor
 
 
 class Task:
+    
+    TASK_PRIORITY_CRITICAL = 0
+    TASK_PRIORITY_HIGH = 1
+    TASK_PRIORITY_LOW = 2
+    
     def __init__(
         self,
         name: str,

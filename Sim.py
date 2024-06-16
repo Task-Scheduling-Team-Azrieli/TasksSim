@@ -170,55 +170,13 @@ class Sim:
 
         return self.total_time, self.final_end_time
 
-    def find_critical_path(self):
-        # perform topological sort to get the tasks in order
-        sorted_tasks = self._topological_sort()
-
-        # calculate earliest start time (ES) for each task
-        for task in sorted_tasks:
-            es = 0
-            for dependency in task.blocked_by:
-                es = max(es, dependency.es)
-            task.es = es + task.duration
-
-        # calculate latest start time (LS) for each task
-        for task in reversed(sorted_tasks):
-            ls = float("inf")
-            if not task.blocking:  # if task is a sink node
-                ls = task.es
-            for predecessor in task.blocked_by:
-                ls = min(ls, predecessor.es - predecessor.duration)
-            task.ls = ls
-
-        # identify critical path tasks
-        critical_path = [task for task in sorted_tasks if task.es == task.ls]
-
-        return critical_path
-
     def show_illustration(self):
         self.timeLineIlustartor.show()
 
     def set_critical_path(self, critical_path):
         self.timeLineIlustartor.set_critical_path(critical_path)
 
-    # helper function for find_critical_path
-    def _topological_sort(self):
-        stack = []
-        visited = set()
-
-        def dfs(task):
-            if task in visited:
-                return
-            visited.add(task)
-            for dependency in task.blocked_by:
-                dfs(dependency)
-            stack.append(task)
-
-        for task in self.tasks:
-            dfs(task)
-
-        # Reverse the stack to get the correct topological order
-        return stack
+   
 
     def __str__(self):
         return (
