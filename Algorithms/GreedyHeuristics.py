@@ -13,32 +13,35 @@ class OutDegreesFirst(Algorithm):
         all_tasks: List["Task"],
         offline: bool = False,
         is_mobileye: bool = False,
+        is_critical: bool = False,
+        threshold: float = -1,
     ):
-        super().__init__(ready_tasks, processors, all_tasks, offline, is_mobileye)
+        super().__init__(
+            ready_tasks,
+            processors,
+            all_tasks,
+            offline,
+            is_mobileye,
+            is_critical,
+            threshold,
+        )
+        if self.is_mobileye:
+            self.color_tasks()
 
     # prioritize tasks with high amount of out-degrees
-    def decide(self, threshold):
+    def decide(self):
         result = sorted(self.ready_tasks, key=lambda task: -len(task.blocking))
         if self.is_mobileye:
-            threshold_index = 0
-            # find threshold index
-            for index, task in enumerate(result):
-                if len(task.blocking) <= threshold:
-                    threshold_index = index
-                    break
-
-            # shuffle list
-            result_left = result[:threshold_index]
-            result_right = result[threshold_index:]
-            random.shuffle(result_left)
-            random.shuffle(result_right)
-            result = result_left + result_right
+            result = Algorithm.sort_by_priority(result)
         return result
 
     def find_thresholds(self, recursion_depth: int) -> List[float]:
         return super()._find_thresholds(
             recursion_depth, self.all_tasks, lambda task: len(task.blocking)
         )
+
+    def color_tasks(self) -> None:
+        return super()._color_tasks(lambda task: len(task.blocking) > self.threshold)
 
 
 class OutDegreesLast(Algorithm):
@@ -49,32 +52,35 @@ class OutDegreesLast(Algorithm):
         all_tasks: List["Task"],
         offline: bool = False,
         is_mobileye: bool = False,
+        is_critical: bool = False,
+        threshold: float = -1,
     ):
-        super().__init__(ready_tasks, processors, all_tasks, offline, is_mobileye)
+        super().__init__(
+            ready_tasks,
+            processors,
+            all_tasks,
+            offline,
+            is_mobileye,
+            is_critical,
+            threshold,
+        )
+        if self.is_mobileye:
+            self.color_tasks()
 
     # prioritize tasks with high amount of out-degrees
-    def decide(self, threshold):
+    def decide(self):
         result = sorted(self.ready_tasks, key=lambda task: len(task.blocking))
         if self.is_mobileye:
-            threshold_index = 0
-            # find threshold index
-            for index, task in enumerate(result):
-                if len(task.blocking) >= threshold:
-                    threshold_index = index
-                    break
-
-            # shuffle list
-            result_left = result[:threshold_index]
-            result_right = result[threshold_index:]
-            random.shuffle(result_left)
-            random.shuffle(result_right)
-            result = result_left + result_right
+            result = Algorithm.sort_by_priority(result)
         return result
 
     def find_thresholds(self, recursion_depth: int) -> int:
         return super()._find_thresholds(
             recursion_depth, self.all_tasks, lambda task: len(task.blocking)
         )
+
+    def color_tasks(self) -> None:
+        return super()._color_tasks(lambda task: len(task.blocking) < self.threshold)
 
 
 class MinRuntimeFirst(Algorithm):
@@ -85,32 +91,36 @@ class MinRuntimeFirst(Algorithm):
         all_tasks: List["Task"],
         offline: bool = False,
         is_mobileye: bool = False,
+        threshold: float = -1,
+        is_critical: bool = False,
     ):
-        super().__init__(ready_tasks, processors, all_tasks, offline, is_mobileye)
+        super().__init__(
+            ready_tasks,
+            processors,
+            all_tasks,
+            offline,
+            is_mobileye,
+            is_critical,
+            threshold,
+        )
+        if self.is_mobileye:
+            self.color_tasks()
 
     # prioritize tasks with high amount of out-degrees
-    def decide(self, threshold):
+    def decide(self):
         result = sorted(self.ready_tasks, key=lambda task: task.duration)
         if self.is_mobileye:
-            threshold_index = 0
-            # find threshold index
-            for index, task in enumerate(result):
-                if task.duration >= threshold:
-                    threshold_index = index
-                    break
-
-            # shuffle list
-            result_left = result[:threshold_index]
-            result_right = result[threshold_index:]
-            random.shuffle(result_left)
-            random.shuffle(result_right)
-            result = result_left + result_right
+            random.shuffle(self.ready_tasks)
+            result = Algorithm.sort_by_priority(self.ready_tasks)
         return result
 
     def find_thresholds(self, recursion_depth: int) -> int:
         return super()._find_thresholds(
             recursion_depth, self.all_tasks, lambda task: task.duration
         )
+
+    def color_tasks(self) -> None:
+        return super()._color_tasks(lambda task: task.duration < self.threshold)
 
 
 class MaxRuntimeFirst(Algorithm):
@@ -121,36 +131,35 @@ class MaxRuntimeFirst(Algorithm):
         all_tasks: List["Task"],
         offline: bool = False,
         is_mobileye: bool = False,
-        threshold: int = -1
+        is_critical: bool = False,
+        threshold: int = -1,
     ):
-        super().__init__(ready_tasks, processors, all_tasks, offline, is_mobileye)
+        super().__init__(
+            ready_tasks,
+            processors,
+            all_tasks,
+            offline,
+            is_mobileye,
+            is_critical,
+            threshold,
+        )
         if self.is_mobileye:
-            self.color_tasks(threshold, )
-        
+            self.color_tasks()
 
     # prioritize tasks with high amount of out-degrees
-    def decide(self, threshold: int):
+    def decide(self):
         result = sorted(self.ready_tasks, key=lambda task: -task.duration)
         if self.is_mobileye:
-            threshold_index = 0
-            # find threshold index
-            for index, task in enumerate(result):
-                if task.duration <= threshold:
-                    threshold_index = index
-                    break
-
-            # shuffle list
-            result_left = result[:threshold_index]
-            result_right = result[threshold_index:]
-            random.shuffle(result_left)
-            random.shuffle(result_right)
-            result = result_left + result_right
+            result = Algorithm.sort_by_priority(random.shuffle(self.ready_tasks))
         return result
 
     def find_thresholds(self, recursion_depth: int) -> int:
         return super()._find_thresholds(
             recursion_depth, self.all_tasks, lambda task: task.duration
         )
+
+    def color_tasks(self) -> None:
+        return super()._color_tasks(lambda task: task.duration > self.threshold)
 
 
 class FromCriticalPath(Algorithm):
@@ -160,17 +169,29 @@ class FromCriticalPath(Algorithm):
         processors: List["Processor"],
         all_tasks: List["Processor"],
         offline: bool = False,
-        is_mobileye: bool = False
+        is_mobileye: bool = False,
     ):
-        super().__init__(ready_tasks, processors, all_tasks, offline, is_mobileye=is_mobileye)
+        super().__init__(
+            ready_tasks,
+            processors,
+            all_tasks,
+            offline,
+            is_mobileye=is_mobileye,
+            is_critical=False,
+            threshold=-1,
+        )
 
     def decide(self, critical_order):
         return sorted(self.ready_tasks, key=lambda x: critical_order.index(x))
 
     def calculate(self):
-        return self.get_critical_path() if self.is_mobileye else self.critical_time()
+        return (
+            self._calc_using_topological_sort()
+            if self.is_mobileye
+            else self._calc_using_critical_time()
+        )
 
-    def critical_time(self):
+    def _calc_using_critical_time(self):
         def update_critical_time(node: Task):
             node.critical_time = (
                 max([n.critical_time for n in node.blocking])
@@ -187,10 +208,10 @@ class FromCriticalPath(Algorithm):
             update_critical_time(t)
 
         return sorted(self.all_tasks, key=lambda task: -task.critical_time)
-    
-    def get_critical_path(self):
-         # helper function for find_critical_path
-        def _topological_sort(self):
+
+    def _calc_using_topological_sort(self):
+        # helper function for find_critical_path
+        def _topological_sort():
             stack = []
             visited = set()
 
@@ -234,3 +255,9 @@ class FromCriticalPath(Algorithm):
             return critical_path
 
         return find_critical_path()
+
+    def color_tasks(self) -> None:
+        return super().color_tasks()
+
+    def find_thresholds(self, recursion_depth: int) -> List[float]:
+        return super().find_thresholds(recursion_depth)

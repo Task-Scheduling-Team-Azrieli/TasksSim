@@ -1,10 +1,10 @@
 from abc import abstractmethod
 import abc
-from GreedyHeuristics import FromCriticalPath
 from typing import Callable, List, TYPE_CHECKING
 
+from Task import Task
+
 if TYPE_CHECKING:
-    from Task import Task
     from Processor import Processor
 
 
@@ -17,7 +17,7 @@ class Algorithm(metaclass=abc.ABCMeta):
         offline: bool = False,
         is_mobileye: bool = False,
         is_critical: bool = False,
-        threshold: int = -1
+        threshold: int = -1,
     ):
         self.processors = processors
         self.ready_tasks = ready_tasks
@@ -56,20 +56,36 @@ class Algorithm(metaclass=abc.ABCMeta):
             )
         )
 
-    def _color_tasks(self, priority_decider: Callable[["Task"], "float"]) -> List[float]:
+    def _color_tasks(
+        self, priority_decider: Callable[["Task"], "float"]
+    ) -> List[float]:
+        from Algorithms.GreedyHeuristics import FromCriticalPath
+
         for task in self.all_tasks:
-            task.priority = priority_decider(task)
+            if priority_decider(task):
+                task.priority = Task.TASK_PRIORITY_HIGH
+            else:
+                task.priority = Task.TASK_PRIORITY_LOW
+
         if self.is_critical:
-            critical_path_instance = FromCriticalPath(self.ready_tasks, self.processors, self.all_tasks, offline=True)
-            critical_path = critical_path_instance.
-            
-    
+            critical_path_instance = FromCriticalPath(
+                self.ready_tasks,
+                self.processors,
+                self.all_tasks,
+                offline=True,
+                is_mobileye=True,
+            )
+            critical_path = critical_path_instance.calculate()
+            for task in self.all_tasks:
+                if task in critical_path:
+                    task.priority = Task.TASK_PRIORITY_CRITICAL
+
     @abstractmethod
     def find_thresholds(self, recursion_depth: int) -> List[float]:
         pass
 
     @abstractmethod
-    def color_tasks(self, recursion_depth: int) -> List[float]:
+    def color_tasks(self) -> None:
         pass
 
     # returns the order of tasks that the algorithm decided we should iterate over
@@ -78,3 +94,7 @@ class Algorithm(metaclass=abc.ABCMeta):
 
     def calculate(self) -> List["Task"]:
         pass
+
+    @staticmethod
+    def sort_by_priority(list: List["Task"]):
+        return sorted(list, key=lambda task: task.priority)

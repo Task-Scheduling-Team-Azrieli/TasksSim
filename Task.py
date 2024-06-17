@@ -1,19 +1,15 @@
 from typing import List, TYPE_CHECKING
 
-TASK_PRIORITY_CRITICAL = 0
-TASK_PRIORITY_HIGH = 1
-TASK_PRIORITY_LOW = 2
-
 if TYPE_CHECKING:
     from Processor import Processor
 
 
 class Task:
-    
+
     TASK_PRIORITY_CRITICAL = 0
     TASK_PRIORITY_HIGH = 1
     TASK_PRIORITY_LOW = 2
-    
+
     def __init__(
         self,
         name: str,
@@ -22,7 +18,7 @@ class Task:
         priority: int,
         blocking: List["Task"],
         blocked_by: List["Task"],
-        critical_time = 0
+        critical_time=0,
     ):
         self.name = name
         self.processor_type = processor_type

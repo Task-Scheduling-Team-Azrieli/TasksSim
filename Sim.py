@@ -91,7 +91,6 @@ class Sim:
         self,
         algorithm: Algorithm,
         illustration=False,
-        threshold: int = -1,
     ):
         """starts the simulation, matches tasks for processors
 
@@ -118,10 +117,7 @@ class Sim:
             if algorithm.offline:
                 ready_tasks_order = algorithm.decide(order)
             else:
-                if not threshold == -1:
-                    ready_tasks_order = algorithm.decide(threshold)
-                else:
-                    ready_tasks_order = algorithm.decide()
+                ready_tasks_order = algorithm.decide()
             for task in ready_tasks_order:
                 for processor in self.processors:
                     if processor.type == task.processor_type and processor.idle:
@@ -176,8 +172,6 @@ class Sim:
     def set_critical_path(self, critical_path):
         self.timeLineIlustartor.set_critical_path(critical_path)
 
-   
-
     def __str__(self):
         return (
             f"{self.algorithm.__class__.__qualname__} End Time: {self.final_end_time}\n"
@@ -190,53 +184,48 @@ def run_sim_once(
     illustration=False,
     offline=False,
     is_mobileye: bool = False,
-    thresholds: list["float"] = [],
+    is_critical: bool = False,
+    thresholds: list["str | float"] = [],
     output_file: str = "Results.xlsx",
 ):
     sim = Sim()
     sim.read_data(file_path)
 
-    critical_path = sim.find_critical_path()
-    critical_path = [task.name for task in critical_path]
-
-    if is_mobileye:
-
-        # get Greedy runtime for this file
-        sim2 = Sim()
-        sim2.read_data(file_path)
-        greedy_runtime, _ = sim2.start(
-            Greedy(sim2.tasks, sim2.processors, sim2.tasks, offline)
+    for threshold in thresholds:
+        # run sim and get total time
+        _, total_time = sim.start(
+            algorithm(
+                sim.tasks,
+                sim.processors,
+                sim.tasks,
+                offline,
+                is_mobileye,
+                is_critical,
+                threshold,
+            ),
+            illustration=False,
+        )
+        # write to excel
+        write_results(
+            output_file,
+            input_file=file_path,
+            algorithm=algorithm,
+            threshold=threshold,
+            runtime=total_time,
         )
 
-        for threshold in thresholds:
-            # run sim and get total time
-            total_time, _ = sim.start(
-                algorithm(sim.tasks, sim.processors, sim.tasks, offline, is_mobileye),
-                illustration=False,
-                threshold=threshold,
-            )
-            # write to excel
-            write_results(
-                output_file,
-                input_file=file_path,
-                algorithm=algorithm,
-                threshold=threshold,
-                runtime=total_time,
-                greedy_time=greedy_runtime,
-            )
-
-            # init sim for the new threshold
-            sim = Sim()
-            sim.read_data(file_path)
-
-    else:
-
-        sim.start(
-            algorithm(sim.tasks, sim.processors, sim.tasks, offline, is_mobileye),
-            illustration=illustration,
-        )
+        # init sim for the new threshold
+        sim = Sim()
+        sim.read_data(file_path)
 
     if illustration:
+        critical_path_instance = FromCriticalPath(
+            sim.tasks, sim.processors, sim.tasks, offline, is_mobileye
+        )
+
+        critical_path = critical_path_instance.calculate()
+        critical_path = [task.name for task in critical_path]
+
         sim.set_critical_path(critical_path)
         sim.show_illustration()
 
@@ -251,7 +240,6 @@ def write_results(
     algorithm: Algorithm,
     threshold: float,
     runtime: float,
-    greedy_time: float,
 ):
     input_file = input_file.split("/")[-1]
     workbook: Workbook = openpyxl.load_workbook(output_file)
@@ -262,12 +250,13 @@ def write_results(
         raise Exception("init the sheet before write result (use init_sheet())")
 
     def same_value(value1, value2):
-        return abs(value1 - value2) < 0.001 * value1
+        if type(value1) == str and type(value2) == str:
+            return value1 == value2
+        return type(value1) == type(value2) and abs(value1 - value2) < 0.01 * value1
 
-    # self.clear_sheet(sheet)
     def find_threshold_column(threshold):
         i = 2
-        while i < 12:
+        while i < 13:
             if same_value(sheet.cell(1, i).value, threshold):
                 return i
             i += 1
@@ -275,9 +264,10 @@ def write_results(
 
     sheet.cell(
         row=FILE_TO_INDEX[input_file], column=find_threshold_column(threshold)
-    ).value = (runtime / greedy_time)
+    ).value = runtime
     workbook.save(output_file)
     workbook.close()
+
 
 def init_dictionary():
     global FILE_TO_INDEX
@@ -286,15 +276,17 @@ def init_dictionary():
     FILE_TO_INDEX = files_dict
 
 
-def init_sheet(output_file: str, algorithm: Algorithm, thresholds: list["float"]):
+def init_sheet(output_file: str, algorithm_name: str, thresholds: list["float"]):
     workbook: Workbook = openpyxl.load_workbook(output_file)
+    if "Sheet1" in workbook.sheetnames:
+        del workbook["Sheet1"]
     sheet = None
-    if algorithm.__class__.__name__ in workbook.sheetnames:
-        sheet = workbook[algorithm.__class__.__name__]
+    if algorithm_name in workbook.sheetnames:
+        sheet = workbook[algorithm_name]
         clear_sheet(sheet)
     else:
-        workbook.create_sheet(algorithm.__class__.__name__)
-        sheet = workbook[algorithm.__class__.__name__]
+        workbook.create_sheet(algorithm_name)
+        sheet = workbook[algorithm_name]
     for i, threshold in enumerate(thresholds):
         sheet.cell(1, i + 2).value = threshold
     for key in FILE_TO_INDEX.keys():
@@ -317,43 +309,22 @@ def run_sim_all(
     illustration=False,
     offline=False,
     is_mobileye: bool = False,
+    is_critical: bool = False,
     thresholds: list["float"] = [],
 ):
-    total_end_time = 0
     count = 0
     for filename in os.listdir(folder_path):
-        if is_mobileye:
-            run_sim_once(
-                algorithm,
-                f"{folder_path}/{filename}",
-                False,
-                offline,
-                is_mobileye,
-                thresholds[algorithm.__qualname__],
-            )
-            print(f"done with {filename}")
-        else:
-            sim = run_sim_once(
-                algorithm,
-                f"{folder_path}/{filename}",
-                illustration=illustration,
-                offline=offline,
-            )
-            print(f"done with {filename}")
-            total_end_time += sim.final_end_time
-
-        count += 1
-
-    average_end_time = total_end_time / count
-
-    print(f"Average End Time For {algorithm.__qualname__}: {average_end_time}")
-
-    with open(output_file, "a") as file:
-        file.write(
-            f"Average End Time For {algorithm.__qualname__}: {average_end_time}\n"
+        run_sim_once(
+            algorithm,
+            f"{folder_path}/{filename}",
+            False,
+            offline,
+            is_mobileye,
+            is_critical,
+            thresholds[algorithm.__qualname__],
         )
-
-    return average_end_time
+        print(f"done with {filename}")
+        count += 1
 
 
 def init_sheets_and_thresholds(output_file, num_rand_files=5):
@@ -368,7 +339,7 @@ def init_sheets_and_thresholds(output_file, num_rand_files=5):
     for random_file in random_files:
         sim.read_data(random_file)
     init_dictionary()
-    algoritms: list[Algorithm] = [
+    algorithms: list[Algorithm] = [
         MinRuntimeFirst(
             sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True
         ),
@@ -382,74 +353,127 @@ def init_sheets_and_thresholds(output_file, num_rand_files=5):
             sim.tasks, sim.processors, sim.tasks, offline=False, is_mobileye=True
         ),
     ]
+
     thresholds = {}
-    for algo in algoritms:
-        thresholds[algo.__class__.__name__] = algo.find_thresholds(3)
-        init_sheet(output_file, algo, thresholds[algo.__class__.__name__])
+    # not mobileye
+    thresholds["FromCriticalPath"] = ["Regular"]
+    thresholds["Greedy"] = ["Regular"]
+    init_sheet(output_file, "FromCriticalPath", thresholds["FromCriticalPath"])
+    init_sheet(output_file, "Greedy", thresholds["Greedy"])
+
+    # yes mobileye
+    for algo in algorithms:
+        thresholds[algo.__class__.__name__] = ["Regular"] + algo.find_thresholds(3)
+        init_sheet(
+            output_file, algo.__class__.__name__, thresholds[algo.__class__.__name__]
+        )
+
     return thresholds
 
 
 def main():
     output_file = "Results.xlsx"
     thresholds = init_sheets_and_thresholds(output_file)
-    # run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, offline=False)
 
-    # print(
-    #     run_sim_once(
-    #         FromCriticalPath,
-    #         "Parser/Data/parsed/gsf.000390.prof.json",
-    #         illustration=True,
-    #         offline=True,
-    #     )
-    # )
-    # print(
-    #     run_sim_once(
-    #         Greedy, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
-    #     )
-    # )
+    # FromCriticalPath
+    run_sim_all(
+        FromCriticalPath,
+        "Parser/Data/parsed",
+        output_file,
+        is_mobileye=False,
+        is_critical=False,
+        thresholds=thresholds,
+    )
+    run_sim_all(
+        FromCriticalPath,
+        "Parser/Data/parsed",
+        output_file,
+        is_mobileye=True,
+        is_critical=False,
+        thresholds=thresholds,
+    )
 
-    # run_sim_once(
-    #     MinRuntimeFirst,
-    #     "Parser/Data/parsed/gsf.000001.prof.json",
-    #     illustration=False,
-    #     is_mobileye=True,
-    #     thresholds=thresholds["MinRuntimeFirst"],
-    #     output_file="Results.xlsx",
-    # )
+    # Greedy
+    run_sim_all(
+        Greedy,
+        "Parser/Data/parsed",
+        output_file,
+        is_mobileye=False,
+        is_critical=False,
+        thresholds=thresholds,
+    )
 
-    # run_sim_once(
-    #     MinRuntimeFirst,
-    #     "Parser/Data/parsed/gsf.000000.prof.json",
-    #     illustration=False,
-    #     thresholds=thresholds["MinRuntimeFirst"],
-    #     is_mobileye=True,
-    #     output_file="Results.xlsx",
-    # )
-
-    # print(
-    #     run_sim_once(
-    #         MaxRuntimeFirst, "Parser/Data/parsed/gsf.000390.prof.json", illustration=False
-    #     )
-    # )
-
+    # MinRuntimeFirst
+    run_sim_all(
+        MinRuntimeFirst,
+        "Parser/Data/parsed",
+        output_file,
+        is_mobileye=False,
+        is_critical=False,
+        thresholds=thresholds,
+    )
     run_sim_all(
         MinRuntimeFirst,
         "Parser/Data/parsed",
         output_file,
         is_mobileye=True,
+        is_critical=False,
         thresholds=thresholds,
     )
-    run_sim_all(MaxRuntimeFirst, "Parser/Data/parsed", output_file, is_mobileye=True, thresholds=thresholds)
-    run_sim_all(OutDegreesFirst, "Parser/Data/parsed", output_file, is_mobileye=True, thresholds=thresholds)
-    run_sim_all(OutDegreesLast, "Parser/Data/parsed", output_file, is_mobileye=True, thresholds=thresholds)
 
-    # print(
-    #     run_sim_once(
-    #         OutDegreesFirst,
-    #         "Parser/Data/parsed/gsf.000390.prof.json",
-    #         illustration=False,
-    #     )
-    # )
+    # MaxRuntimeFirst
+    run_sim_all(
+        MaxRuntimeFirst,
+        "Parser/Data/parsed",
+        output_file,
+        is_mobileye=False,
+        is_critical=False,
+        thresholds=thresholds,
+    )
+    run_sim_all(
+        MaxRuntimeFirst,
+        "Parser/Data/parsed",
+        output_file,
+        is_mobileye=True,
+        is_critical=False,
+        thresholds=thresholds,
+    )
+
+    # OutDegreesLast
+    run_sim_all(
+        OutDegreesLast,
+        "Parser/Data/parsed",
+        output_file,
+        is_mobileye=False,
+        is_critical=False,
+        thresholds=thresholds,
+    )
+    run_sim_all(
+        OutDegreesLast,
+        "Parser/Data/parsed",
+        output_file,
+        is_mobileye=True,
+        is_critical=False,
+        thresholds=thresholds,
+    )
+
+    # OutDegreesFirst
+    run_sim_all(
+        OutDegreesFirst,
+        "Parser/Data/parsed",
+        output_file,
+        is_mobileye=False,
+        is_critical=False,
+        thresholds=thresholds,
+    )
+    run_sim_all(
+        OutDegreesFirst,
+        "Parser/Data/parsed",
+        output_file,
+        is_mobileye=True,
+        is_critical=False,
+        thresholds=thresholds,
+    )
 
 
 if __name__ == "__main__":
