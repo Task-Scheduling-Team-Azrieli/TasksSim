@@ -191,25 +191,39 @@ def run_sim_once(
     sim = Sim()
     sim.read_data(file_path)
 
+    if algorithm.__qualname__ == "FromCriticalPath" and len(thresholds) > 1:
+        run_sim_once(
+            algorithm,
+            file_path,
+            illustration,
+            offline,
+            is_mobileye,
+            is_critical,
+            ["Offline" if offline else "Online"],
+            output_file,
+        )
+        return sim
+
     for threshold in thresholds:
         # run sim and get total time
+        algorithm_instance = algorithm(
+            sim.tasks,
+            sim.processors,
+            sim.tasks,
+            offline,
+            is_mobileye,
+            is_critical,
+            threshold,
+        )
         _, total_time = sim.start(
-            algorithm(
-                sim.tasks,
-                sim.processors,
-                sim.tasks,
-                offline,
-                is_mobileye,
-                is_critical,
-                threshold,
-            ),
+            algorithm_instance,
             illustration=False,
         )
         # write to excel
         write_results(
             output_file,
             input_file=file_path,
-            algorithm=algorithm,
+            algorithm=algorithm_instance,
             threshold=threshold,
             runtime=total_time,
         )
@@ -244,17 +258,24 @@ def write_results(
     input_file = input_file.split("/")[-1]
     workbook: Workbook = openpyxl.load_workbook(output_file)
 
-    if algorithm.__qualname__ in workbook.sheetnames:
-        sheet = workbook[algorithm.__qualname__]
+    if algorithm.__class__.__name__ in workbook.sheetnames:
+        sheet = workbook[algorithm.__class__.__name__]
     else:
         raise Exception("init the sheet before write result (use init_sheet())")
 
     def same_value(value1, value2):
         if type(value1) == str and type(value2) == str:
             return value1 == value2
-        return type(value1) == type(value2) and abs(value1 - value2) < 0.01 * value1
+
+        if type(value1) != type(value2):
+            if type(value1) == str or type(value2) == str:
+                return False
+
+        return abs(value1 - value2) < 0.1 * value1
 
     def find_threshold_column(threshold):
+        if not algorithm.is_mobileye:
+            return 2
         i = 2
         while i < 13:
             if same_value(sheet.cell(1, i).value, threshold):
@@ -287,8 +308,11 @@ def init_sheet(output_file: str, algorithm_name: str, thresholds: list["float"])
     else:
         workbook.create_sheet(algorithm_name)
         sheet = workbook[algorithm_name]
+
+    sheet.cell(1, 2).value = "Regular"
     for i, threshold in enumerate(thresholds):
-        sheet.cell(1, i + 2).value = threshold
+        sheet.cell(1, i + 3).value = threshold
+
     for key in FILE_TO_INDEX.keys():
         sheet.cell(FILE_TO_INDEX[key], 1).value = key
 
@@ -356,14 +380,14 @@ def init_sheets_and_thresholds(output_file, num_rand_files=5):
 
     thresholds = {}
     # not mobileye
-    thresholds["FromCriticalPath"] = ["Regular"]
+    thresholds["FromCriticalPath"] = ["Offline", "Online"]
     thresholds["Greedy"] = ["Regular"]
     init_sheet(output_file, "FromCriticalPath", thresholds["FromCriticalPath"])
     init_sheet(output_file, "Greedy", thresholds["Greedy"])
 
     # yes mobileye
     for algo in algorithms:
-        thresholds[algo.__class__.__name__] = ["Regular"] + algo.find_thresholds(3)
+        thresholds[algo.__class__.__name__] = algo.find_thresholds(3)
         init_sheet(
             output_file, algo.__class__.__name__, thresholds[algo.__class__.__name__]
         )
@@ -380,7 +404,8 @@ def main():
         FromCriticalPath,
         "Parser/Data/parsed",
         output_file,
-        is_mobileye=False,
+        offline=False,
+        is_mobileye=True,
         is_critical=False,
         thresholds=thresholds,
     )
@@ -388,7 +413,8 @@ def main():
         FromCriticalPath,
         "Parser/Data/parsed",
         output_file,
-        is_mobileye=True,
+        offline=True,
+        is_mobileye=False,
         is_critical=False,
         thresholds=thresholds,
     )

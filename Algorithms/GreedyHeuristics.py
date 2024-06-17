@@ -25,7 +25,7 @@ class OutDegreesFirst(Algorithm):
             is_critical,
             threshold,
         )
-        if self.is_mobileye:
+        if self.is_mobileye and type(threshold) != str:
             self.color_tasks()
 
     # prioritize tasks with high amount of out-degrees
@@ -64,7 +64,7 @@ class OutDegreesLast(Algorithm):
             is_critical,
             threshold,
         )
-        if self.is_mobileye:
+        if self.is_mobileye and type(threshold) != str and type(threshold) != str:
             self.color_tasks()
 
     # prioritize tasks with high amount of out-degrees
@@ -103,7 +103,7 @@ class MinRuntimeFirst(Algorithm):
             is_critical,
             threshold,
         )
-        if self.is_mobileye:
+        if self.is_mobileye and type(threshold) != str:
             self.color_tasks()
 
     # prioritize tasks with high amount of out-degrees
@@ -143,7 +143,7 @@ class MaxRuntimeFirst(Algorithm):
             is_critical,
             threshold,
         )
-        if self.is_mobileye:
+        if self.is_mobileye and type(threshold) != str:
             self.color_tasks()
 
     # prioritize tasks with high amount of out-degrees
@@ -170,6 +170,8 @@ class FromCriticalPath(Algorithm):
         all_tasks: List["Processor"],
         offline: bool = False,
         is_mobileye: bool = False,
+        is_critical: bool = False,
+        threshold: float = -1,
     ):
         super().__init__(
             ready_tasks,
@@ -177,12 +179,19 @@ class FromCriticalPath(Algorithm):
             all_tasks,
             offline,
             is_mobileye=is_mobileye,
-            is_critical=False,
-            threshold=-1,
+            is_critical=is_critical,
+            threshold=threshold,
         )
+        if self.is_mobileye and not self.offline:
+            self.color_tasks()
 
-    def decide(self, critical_order):
-        return sorted(self.ready_tasks, key=lambda x: critical_order.index(x))
+    def decide(self, critical_order=[]):
+        if self.offline:
+            result = sorted(self.ready_tasks, key=lambda x: critical_order.index(x))
+        if self.is_mobileye:
+            random.shuffle(self.ready_tasks)
+            result = Algorithm.sort_by_priority(self.ready_tasks)
+        return result
 
     def calculate(self):
         return (
@@ -257,7 +266,8 @@ class FromCriticalPath(Algorithm):
         return find_critical_path()
 
     def color_tasks(self) -> None:
-        return super().color_tasks()
+        critical_path = self.calculate()
+        return super()._color_tasks(lambda task: task in critical_path)
 
     def find_thresholds(self, recursion_depth: int) -> List[float]:
         return super().find_thresholds(recursion_depth)
