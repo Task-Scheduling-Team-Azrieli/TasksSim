@@ -398,7 +398,7 @@ def init_sheets_and_thresholds(output_file, num_rand_files=5):
 def main():
     output_file = "Results.xlsx"
     thresholds = init_sheets_and_thresholds(output_file)
-
+"""
     # FromCriticalPath
     run_sim_all(
         FromCriticalPath,
@@ -446,7 +446,7 @@ def main():
         is_critical=False,
         thresholds=thresholds,
     )
-
+"""
     # MaxRuntimeFirst
     run_sim_all(
         MaxRuntimeFirst,
