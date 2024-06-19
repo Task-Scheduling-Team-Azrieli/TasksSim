@@ -150,7 +150,8 @@ class MaxRuntimeFirst(Algorithm):
     def decide(self):
         result = sorted(self.ready_tasks, key=lambda task: -task.duration)
         if self.is_mobileye:
-            result = Algorithm.sort_by_priority(random.shuffle(self.ready_tasks))
+            random.shuffle(self.ready_tasks)
+            result = Algorithm.sort_by_priority(self.ready_tasks)
         return result
 
     def find_thresholds(self, recursion_depth: int) -> int:
