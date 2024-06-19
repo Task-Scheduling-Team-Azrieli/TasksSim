@@ -398,8 +398,9 @@ def init_sheets_and_thresholds(output_file, num_rand_files=5):
 def main():
     output_file = "Results.xlsx"
     thresholds = init_sheets_and_thresholds(output_file)
-"""
+    
     # FromCriticalPath
+    print("running FromCriticalPath")
     run_sim_all(
         FromCriticalPath,
         "Parser/Data/parsed",
@@ -420,6 +421,7 @@ def main():
     )
 
     # Greedy
+    print("running Greedy")
     run_sim_all(
         Greedy,
         "Parser/Data/parsed",
@@ -430,6 +432,7 @@ def main():
     )
 
     # MinRuntimeFirst
+    print("running MinRuntimeFirst")
     run_sim_all(
         MinRuntimeFirst,
         "Parser/Data/parsed",
@@ -446,8 +449,9 @@ def main():
         is_critical=False,
         thresholds=thresholds,
     )
-"""
+    
     # MaxRuntimeFirst
+    print("running MaxRuntimeFirst")
     run_sim_all(
         MaxRuntimeFirst,
         "Parser/Data/parsed",
@@ -456,6 +460,7 @@ def main():
         is_critical=False,
         thresholds=thresholds,
     )
+    
     run_sim_all(
         MaxRuntimeFirst,
         "Parser/Data/parsed",
@@ -464,8 +469,9 @@ def main():
         is_critical=False,
         thresholds=thresholds,
     )
-
+    
     # OutDegreesLast
+    print("running OutDegreesLast")
     run_sim_all(
         OutDegreesLast,
         "Parser/Data/parsed",
@@ -474,6 +480,7 @@ def main():
         is_critical=False,
         thresholds=thresholds,
     )
+
     run_sim_all(
         OutDegreesLast,
         "Parser/Data/parsed",
@@ -482,8 +489,9 @@ def main():
         is_critical=False,
         thresholds=thresholds,
     )
-
+    
     # OutDegreesFirst
+    print("running OutDegreesFirst")
     run_sim_all(
         OutDegreesFirst,
         "Parser/Data/parsed",
