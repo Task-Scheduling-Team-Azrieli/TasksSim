@@ -186,6 +186,7 @@ def run_sim_once(
     is_mobileye: bool = False,
     is_critical: bool = False,
     thresholds: list["str | float"] = [],
+    should_write_results=False,
     output_file: str = "Results.xlsx",
 ):
     sim = Sim()
@@ -217,31 +218,32 @@ def run_sim_once(
         )
         _, total_time = sim.start(
             algorithm_instance,
-            illustration=False,
+            illustration=illustration,
         )
         # write to excel
-        write_results(
-            output_file,
-            input_file=file_path,
-            algorithm=algorithm_instance,
-            threshold=threshold,
-            runtime=total_time,
-        )
+        if should_write_results:
+            write_results(
+                output_file,
+                input_file=file_path,
+                algorithm=algorithm_instance,
+                threshold=threshold,
+                runtime=total_time,
+            )
+
+        if illustration:
+            critical_path_instance = FromCriticalPath(
+                sim.tasks, sim.processors, sim.tasks, offline, is_mobileye
+            )
+
+            critical_path = critical_path_instance.calculate()
+            critical_path = [task.name for task in critical_path]
+
+            sim.set_critical_path(critical_path)
+            sim.show_illustration()
 
         # init sim for the new threshold
         sim = Sim()
         sim.read_data(file_path)
-
-    if illustration:
-        critical_path_instance = FromCriticalPath(
-            sim.tasks, sim.processors, sim.tasks, offline, is_mobileye
-        )
-
-        critical_path = critical_path_instance.calculate()
-        critical_path = [task.name for task in critical_path]
-
-        sim.set_critical_path(critical_path)
-        sim.show_illustration()
 
     return sim
 
@@ -397,116 +399,18 @@ def init_sheets_and_thresholds(output_file, num_rand_files=5):
 
 def main():
     output_file = "Results.xlsx"
-    thresholds = init_sheets_and_thresholds(output_file)
-    
-    # FromCriticalPath
-    print("running FromCriticalPath")
-    run_sim_all(
-        FromCriticalPath,
-        "Parser/Data/parsed",
-        output_file,
-        offline=False,
-        is_mobileye=True,
-        is_critical=False,
-        thresholds=thresholds,
-    )
-    run_sim_all(
-        FromCriticalPath,
-        "Parser/Data/parsed",
-        output_file,
-        offline=True,
-        is_mobileye=False,
-        is_critical=False,
-        thresholds=thresholds,
-    )
+    # thresholds = init_sheets_and_thresholds(output_file)
 
     # Greedy
     print("running Greedy")
-    run_sim_all(
+    run_sim_once(
         Greedy,
-        "Parser/Data/parsed",
-        output_file,
+        "Parser/Data/parsed/gsf.-00001.prof.json",
+        illustration=True,
+        offline=False,
         is_mobileye=False,
         is_critical=False,
-        thresholds=thresholds,
-    )
-
-    # MinRuntimeFirst
-    print("running MinRuntimeFirst")
-    run_sim_all(
-        MinRuntimeFirst,
-        "Parser/Data/parsed",
-        output_file,
-        is_mobileye=False,
-        is_critical=False,
-        thresholds=thresholds,
-    )
-    run_sim_all(
-        MinRuntimeFirst,
-        "Parser/Data/parsed",
-        output_file,
-        is_mobileye=True,
-        is_critical=False,
-        thresholds=thresholds,
-    )
-    
-    # MaxRuntimeFirst
-    print("running MaxRuntimeFirst")
-    run_sim_all(
-        MaxRuntimeFirst,
-        "Parser/Data/parsed",
-        output_file,
-        is_mobileye=False,
-        is_critical=False,
-        thresholds=thresholds,
-    )
-    
-    run_sim_all(
-        MaxRuntimeFirst,
-        "Parser/Data/parsed",
-        output_file,
-        is_mobileye=True,
-        is_critical=False,
-        thresholds=thresholds,
-    )
-    
-    # OutDegreesLast
-    print("running OutDegreesLast")
-    run_sim_all(
-        OutDegreesLast,
-        "Parser/Data/parsed",
-        output_file,
-        is_mobileye=False,
-        is_critical=False,
-        thresholds=thresholds,
-    )
-
-    run_sim_all(
-        OutDegreesLast,
-        "Parser/Data/parsed",
-        output_file,
-        is_mobileye=True,
-        is_critical=False,
-        thresholds=thresholds,
-    )
-    
-    # OutDegreesFirst
-    print("running OutDegreesFirst")
-    run_sim_all(
-        OutDegreesFirst,
-        "Parser/Data/parsed",
-        output_file,
-        is_mobileye=False,
-        is_critical=False,
-        thresholds=thresholds,
-    )
-    run_sim_all(
-        OutDegreesFirst,
-        "Parser/Data/parsed",
-        output_file,
-        is_mobileye=True,
-        is_critical=False,
-        thresholds=thresholds,
+        thresholds={"Greedy": ["Regular"]},
     )
 
 
