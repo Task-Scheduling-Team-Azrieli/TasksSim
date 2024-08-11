@@ -72,31 +72,27 @@ class TimeLineIlustartion:
         ax_start = plt.axes([0.1, 0.1, 0.65, 0.03])
         ax_end = plt.axes([0.1, 0.05, 0.65, 0.03])
 
+        val_max = max(
+            [
+                end_time
+                for _, timeline in self.timeLines.items()
+                for _, _, end_time in timeline
+            ]
+        )
+
         slider_start = Slider(
             ax_start,
             "Start Time",
             valmin=0,
-            valmax=max(
-                [
-                    end_time
-                    for _, timeline in self.timeLines.items()
-                    for _, _, end_time in timeline
-                ]
-            ),
+            valmax=val_max,
             valinit=0,
         )
         slider_end = Slider(
             ax_end,
             "End Time",
             valmin=0,
-            valmax=max(
-                [
-                    end_time
-                    for _, timeline in self.timeLines.items()
-                    for _, _, end_time in timeline
-                ]
-            ),
-            valinit=100,
+            valmax=val_max,
+            valinit=val_max,
         )
 
         def update(val):
@@ -128,6 +124,9 @@ class TimeLineIlustartion:
                         # ax.text((max(start_time, self.start_time) + min(end_time, self.end_time)) / 2, y, task_name, ha='center', va='center')
                 plt.yticks([y], [processor])
             fig.canvas.draw_idle()
+
+        slider_end.set_val(val_max)
+        update(val_max)
 
         slider_start.on_changed(update)
         slider_end.on_changed(update)
